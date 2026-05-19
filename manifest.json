@@ -1,0 +1,27 @@
+{
+  "name": "WTFIMM?! — Where The F*ck Is My Money?!",
+  "short_name": "WTFIMM?!",
+  "description": "Personal expense tracker. Because money disappears and you deserve to know where.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0e1a",
+  "theme_color": "#0e0e1a",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "screenshots": []
+}

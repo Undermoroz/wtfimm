@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#0e0e1a" id="meta-theme-color"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="WTFIMM?!"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="Personal expense tracker — Where The F*ck Is My Money?!"/>
+<meta property="og:title" content="WTFIMM?!"/>
+<meta property="og:description" content="Personal expense tracker — Where The F*ck Is My Money?!"/>
+<meta property="og:type" content="website"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" href="icon-512.png" sizes="512x512" type="image/png"/>
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<title>WTFIMM?!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Bebas+Neue&family=Permanent+Marker&family=Bangers&family=VT323&display=swap" rel="stylesheet"/>
+<style>
+/* ─── Mobile foundations ────────────────────────────────────────────── */
+html{
+  -webkit-text-size-adjust:100%; /* prevent iOS landscape auto-inflate */
+  text-size-adjust:100%;
+}
+html,body{overscroll-behavior:none} /* prevent pull-to-refresh */
+a,button,input,select,textarea,label,.cb,.tab,.opt-btn,.abtn,.mbtn,.ab,.ic-btn{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation; /* kill 300ms tap delay */
+}
+
+/* ─── Background orbs ───────────────────────────────────────────────── */
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);will-change:transform}
+.orb-1{width:520px;height:520px;top:-140px;left:-100px;background:var(--orb1);animation:orb1 26s ease-in-out infinite}
+.orb-2{width:440px;height:440px;bottom:-100px;right:-90px;background:var(--orb2);animation:orb2 32s ease-in-out infinite}
+.orb-3{width:380px;height:380px;top:35%;left:15%;background:var(--orb3);animation:orb3 21s ease-in-out infinite}
+@keyframes orb1{0%,100%{transform:translate(0,0)}35%{transform:translate(50px,-35px)}70%{transform:translate(-25px,55px)}}
+@keyframes orb2{0%,100%{transform:translate(0,0)}35%{transform:translate(-40px,30px)}70%{transform:translate(60px,-45px)}}
+@keyframes orb3{0%,100%{transform:translate(0,0)}35%{transform:translate(35px,-50px)}70%{transform:translate(-45px,30px)}}
+@media(prefers-reduced-motion:reduce){.orb{animation:none}}
+/* Safe areas: notch / Dynamic Island / home bar */
+@supports (padding:env(safe-area-inset-top)){
+  body{
+    padding-top:   max(clamp(14px,4vw,20px), env(safe-area-inset-top));
+    padding-right: max(clamp(12px,3.5vw,16px), env(safe-area-inset-right));
+    padding-bottom:max(60px, calc(44px + env(safe-area-inset-bottom)));
+    padding-left:  max(clamp(12px,3.5vw,16px), env(safe-area-inset-left));
+  }
+  .toast{bottom:max(24px,calc(20px + env(safe-area-inset-bottom)))}
+  .ee-back{padding:max(20px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left))}
+}
+/* ─── Themes ────────────────────────────────────────────────────────── */
+/* Gen Z — blue-purple dark, saturated accents */
+:root[data-theme="dark"] {
+  --bg: #0e0e1a;
+  --card-bg: #17172a;
+  --card-bg2: #1f1f38;
+  --border: #2c2c50;
+  --border-hover: #4444a0;
+  --text: #ededf8;
+  --text-dim: #9898c0;
+  --text-mute: #58587a;
+  --separator: #1f1f38;
+  --accent: #7c6dff;
+  --accent-fade: rgba(124,109,255,0.16);
+  --success: #3ecf8e;
+  --danger: #ff5577;
+  --color-cell-border: #fff;
+  --shadow: none;
+  --btn-primary-text: #fff;
+  --input-bg: #1f1f38;
+  --orb1: rgba(108,90,255,0.28);
+  --orb2: rgba(190,70,255,0.20);
+  --orb3: rgba(65,45,200,0.14);
+}
+/* Eyeball-friendly — near-black, zero blue bias */
+:root[data-theme="dark-og"] {
+  --bg: #0d0d10;
+  --card-bg: #18181f;
+  --card-bg2: #1e1e28;
+  --border: #29293a;
+  --border-hover: #44445a;
+  --text: #e6e6ee;
+  --text-dim: #88889a;
+  --text-mute: #50505e;
+  --separator: #1e1e28;
+  --accent: #6060ee;
+  --accent-fade: rgba(96,96,238,0.14);
+  --success: #3ecf8e;
+  --danger: #e05060;
+  --color-cell-border: #fff;
+  --shadow: none;
+  --btn-primary-text: #fff;
+  --input-bg: #1e1e28;
+  --orb1: rgba(60,60,150,0.18);
+  --orb2: rgba(40,25,65,0.22);
+  --orb3: rgba(25,45,85,0.14);
+}
+/* Cataract — warm cream light */
+:root[data-theme="light"] {
+  --bg: #f2ede0;
+  --card-bg: #faf8f2;
+  --card-bg2: #eae4d6;
+  --border: #d5cebb;
+  --border-hover: #aaa490;
+  --text: #252340;
+  --text-dim: #5c5a72;
+  --text-mute: #9896a8;
+  --separator: #e4dece;
+  --accent: #5046e4;
+  --accent-fade: rgba(80,70,228,0.10);
+  --success: #1f9e62;
+  --danger: #d03030;
+  --color-cell-border: #252340;
+  --shadow: 0 1px 3px rgba(20,18,50,0.06), 0 4px 14px rgba(20,18,50,0.07);
+  --btn-primary-text: #fff;
+  --input-bg: #eae4d6;
+  --orb1: rgba(80,70,228,0.09);
+  --orb2: rgba(255,120,40,0.11);
+  --orb3: rgba(220,60,100,0.07);
+}
+/* ─── Base ──────────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:clamp(14px,4vw,20px) clamp(12px,3.5vw,16px) 60px;display:flex;justify-content:center;transition:background .2s,color .2s;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.w{width:100%;max-width:480px;position:relative;z-index:1}
+.title{font-family:'Courier New',monospace;font-size:34px;font-weight:800;text-align:center;letter-spacing:.04em;background:linear-gradient(135deg,#ff4060 0%,#ff8030 35%,#9060ff 75%,#6060ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-top:4px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent}
+.subtitle{font-size:12px;text-align:center;color:var(--accent);font-style:italic;letter-spacing:.06em;opacity:.85;font-weight:500;margin-top:6px;margin-bottom:22px;text-transform:uppercase}
+/* ─── Cards & rows ──────────────────────────────────────────────────── */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:var(--shadow)}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-mute);margin-bottom:5px;font-weight:600}
+.big{font-size:clamp(19px,5.5vw,24px);font-weight:700;line-height:1.1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.dim{font-size:13px;font-weight:400;color:var(--text-dim)}
+.sub{font-size:12px;color:var(--text-dim);margin-top:4px;font-variant-numeric:tabular-nums}
+.balance-bar{border-top:1px solid var(--separator);margin-top:14px;padding-top:12px;display:flex;justify-content:space-between;align-items:baseline}
+.balance-val{font-size:clamp(15px,4.2vw,19px);font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.balance-val.pos{color:var(--success)}
+.balance-val.neg{color:var(--danger)}
+/* ─── Month nav ─────────────────────────────────────────────────────── */
+.mnav{display:flex;align-items:center;justify-content:space-between;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.mbtn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 16px;cursor:pointer;font-size:15px;color:var(--text-dim);transition:.15s;font-family:inherit}
+.mbtn:hover:not(:disabled){color:var(--text);border-color:var(--border-hover)}
+.mbtn:disabled{opacity:.2;cursor:default}
+.ml{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.pick-trigger{cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:6px;padding:2px 6px;transition:.15s}
+.pick-trigger:hover{background:var(--card-bg2)}
+.pick-trigger::after{content:" ▾";font-size:9px;opacity:.5;font-family:system-ui,sans-serif}
+.pick-trigger.open::after{content:" ▴"}
+/* ─── Month picker ──────────────────────────────────────────────────── */
+.mpick-back{position:fixed;inset:0;z-index:5}
+.mpick{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:16px 14px;margin-bottom:12px;position:relative;z-index:10;animation:mpick-in .2s cubic-bezier(.175,.885,.32,1.275) both;box-shadow:0 8px 32px rgba(0,0,0,.25),0 0 0 1px var(--border)}
+@keyframes mpick-in{from{opacity:0;transform:scale(.95) translateY(-6px)}to{opacity:1;transform:none}}
+.mpick-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mpick-yr{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.mpick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mpick-btn{padding:10px 4px;font-size:12px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--text-dim);cursor:pointer;font-family:inherit;font-weight:500;transition:.15s;text-align:center}
+.mpick-btn:hover:not(:disabled){background:var(--card-bg2);color:var(--text);border-color:var(--border-hover)}
+.mpick-btn.on{background:var(--accent);color:var(--btn-primary-text);border-color:transparent;font-weight:700}
+.mpick-btn:disabled{opacity:.22;cursor:default}
+/* ─── Tabs ──────────────────────────────────────────────────────────── */
+.tabs{display:flex;gap:5px;margin-bottom:12px}
+.tab{flex:1;padding:9px 2px;font-size:11px;cursor:pointer;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);transition:.15s;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;letter-spacing:.01em}
+.tab:hover{color:var(--text);border-color:var(--border-hover)}
+.tab.on{background:var(--accent);color:var(--btn-primary-text);border-color:transparent;font-weight:700}
+/* ─── Dashboard breakdown ───────────────────────────────────────────── */
+.cr{margin-bottom:16px}
+.ct{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cn{font-size:13px;color:var(--text);font-weight:500}
+.ca{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.cp{font-size:12px;color:var(--text-dim);margin-top:2px;font-weight:500}
+.bar{height:5px;background:var(--card-bg2);border-radius:99px;overflow:hidden}
+.bf{height:100%;border-radius:99px;transition:width .4s}
+/* ─── Donut chart ───────────────────────────────────────────────────── */
+.donut-wrap{display:flex;justify-content:center;margin-bottom:20px}
+.donut-svg{width:150px;height:150px;overflow:visible}
+.donut-total{font-size:20px;font-weight:700;fill:var(--text);font-family:'Inter',sans-serif;letter-spacing:-.02em}
+.donut-unit{font-size:11px;fill:var(--text-dim);font-family:'Inter',sans-serif}
+/* ─── Forms ─────────────────────────────────────────────────────────── */
+.fg{margin-bottom:14px}
+.fl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);display:block;margin-bottom:7px;font-weight:600}
+select,input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-fade)}
+select option{background:var(--card-bg);color:var(--text)}
+
+/* ─── Remove number spinners ────────────────────────────────────────── */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type="number"]{-moz-appearance:textfield}
+
+/* ─── Date picker indicator: match theme ────────────────────────────── */
+input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;border-radius:5px;padding:3px;
+  opacity:.5;transition:opacity .15s;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
+:root[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+:root[data-theme="dark-og"] input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1) brightness(.75);
+}
+:root[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:brightness(.25) saturate(.8);
+}
+.cur-row{display:flex;gap:8px}
+.cb{flex:1;padding:11px;font-size:13px;cursor:pointer;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:inherit;transition:.15s;font-weight:500}
+.cb:hover{color:var(--text);border-color:var(--border-hover)}
+.cb.on{background:var(--accent);color:var(--btn-primary-text);border-color:transparent;font-weight:700}
+.cb.inc-on{background:var(--success);color:#fff;border-color:transparent;font-weight:700}
+.cb.exp-on{background:var(--danger);color:#fff;border-color:transparent;font-weight:700}
+.prev{font-size:11px;color:var(--success);margin-top:6px;min-height:16px;font-weight:600}
+.abtn{width:100%;padding:13px;font-size:14px;font-weight:700;cursor:pointer;border:none;border-radius:11px;color:var(--btn-primary-text);font-family:inherit;transition:opacity .15s,filter .15s;margin-top:4px;background:var(--accent);letter-spacing:.01em}
+.abtn:hover{filter:brightness(1.1)}
+.abtn:active{filter:brightness(.95)}
+.abtn.sec{background:transparent;border:1px solid var(--border);color:var(--text);font-weight:500}
+.abtn.sec:hover{background:var(--card-bg2);border-color:var(--border-hover);filter:none}
+.abtn.inc{background:var(--success)}
+.abtn.exp{background:var(--danger)}
+/* ─── Log ───────────────────────────────────────────────────────────── */
+.li{position:relative;overflow:hidden;border-bottom:1px solid var(--separator)}
+.li:last-child{border:none}
+.li.income .av{background:rgba(62,207,142,0.12)}
+.li-inner{display:flex;align-items:center;gap:11px;padding:12px 0;background:var(--card-bg);transition:transform .28s cubic-bezier(.25,.1,.25,1);will-change:transform}
+.li-del-sw{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--danger);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ln{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lm{font-size:12px;color:var(--text-dim);margin-top:2px}
+.la{font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.la.inc-amt{color:var(--success)}
+.lu{font-size:12px;color:var(--text-dim)}
+.actions{display:flex;gap:6px;margin-top:4px;justify-content:flex-end}
+.ab{border:none;background:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:5px;font-family:inherit;opacity:.65;transition:.15s}
+.ab:hover{opacity:1;background:var(--card-bg2)}
+.ab.del{color:var(--danger)}
+.ab.edit{color:var(--accent)}
+/* ─── Summary ───────────────────────────────────────────────────────── */
+.sbox{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
+.spre{font-family:'JetBrains Mono',ui-monospace,'Fira Code','Courier New',monospace;font-size:12px;white-space:pre-wrap;line-height:1.75;color:var(--text-dim);margin-bottom:14px}
+.cpb{width:100%;padding:11px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text);font-family:inherit;transition:.2s;letter-spacing:.01em}
+.cpb:hover{background:var(--card-bg2);border-color:var(--border-hover)}
+/* ─── Settings ──────────────────────────────────────────────────────── */
+.sec{margin-bottom:24px}
+.sec-h{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-mute);margin-bottom:12px;font-weight:700}
+.cat-list{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.cat-li{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--separator)}
+.cat-li:last-child{border:none}
+.cat-em{font-size:18px;flex-shrink:0;width:30px;text-align:center}
+.cat-nm{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.cat-color{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ic-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:4px 8px;border-radius:7px;opacity:.55;transition:.15s;color:var(--text)}
+.ic-btn:hover{opacity:1;background:var(--card-bg2)}
+.edit-box{background:var(--card-bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.edit-h{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);margin-bottom:12px;font-weight:700}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;max-height:200px;overflow-y:auto;margin-bottom:8px}
+.emoji-cell{padding:6px;font-size:18px;cursor:pointer;border-radius:7px;text-align:center;background:transparent;border:none;transition:.1s;color:var(--text)}
+.emoji-cell:hover{background:var(--border)}
+.emoji-cell.on{background:var(--accent);color:#fff}
+.color-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-top:4px}
+.color-cell{width:100%;aspect-ratio:1;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.1s;background:transparent;padding:0}
+.color-cell.on{border-color:var(--color-cell-border);transform:scale(1.15)}
+.btn-row{display:flex;gap:8px;margin-top:14px}
+.btn-row .abtn{margin:0}
+.opt-row{display:flex;gap:8px;flex-wrap:wrap}
+.opt-btn{flex:1;min-width:90px;padding:12px 8px;font-size:13px;cursor:pointer;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:inherit;transition:.15s;font-weight:500}
+.opt-btn:hover{color:var(--text);border-color:var(--border-hover)}
+.opt-btn.on{background:var(--accent);color:var(--btn-primary-text);border-color:transparent;font-weight:700}
+/* ─── Misc ──────────────────────────────────────────────────────────── */
+.emp{text-align:center;padding:3rem 1rem;color:var(--text-dim);font-size:15px;font-weight:500;line-height:1.8}
+.ctx{font-size:12px;color:var(--text-dim);margin-bottom:13px}
+.rate-hint{font-size:12px;color:var(--text-dim);margin-top:6px;font-style:italic}
+.rate-locked{font-size:10px;color:var(--accent);background:var(--accent-fade);padding:3px 9px;border-radius:99px;display:inline-block;margin-top:4px;font-weight:700;letter-spacing:.04em}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;font-size:13px;font-weight:700;padding:10px 22px;border-radius:99px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:100;letter-spacing:.01em}
+.toast.show{opacity:1}
+.toast.err{background:var(--danger)}
+
+/* ─── Title animations ──────────────────────────────────────────────── */
+@keyframes title-rage {
+  0%,100%{transform:translate(0,0) rotate(0deg);filter:none}
+  8% {transform:translate(-3px, 1px) rotate(-.5deg);filter:hue-rotate(12deg) brightness(1.1)}
+  16%{transform:translate( 3px,-1px) rotate( .5deg)}
+  24%{transform:translate(-2px, 2px) rotate(-.4deg);filter:hue-rotate(-8deg)}
+  32%{transform:translate( 3px, 0px) rotate( .4deg);filter:brightness(1.12)}
+  40%{transform:translate(-3px,-1px) rotate(-.5deg);filter:hue-rotate(18deg)}
+  48%{transform:translate( 2px, 1px) rotate( .4deg)}
+  56%{transform:translate(-2px,-2px) rotate(-.3deg);filter:hue-rotate(-12deg) brightness(1.08)}
+  64%{transform:translate( 3px, 1px) rotate( .5deg)}
+  72%{transform:translate(-1px, 2px) rotate(-.4deg);filter:hue-rotate(8deg)}
+  80%{transform:translate( 2px,-1px) rotate( .3deg)}
+  88%{transform:translate(-3px, 0px) rotate(-.4deg);filter:hue-rotate(-6deg) brightness(1.06)}
+}
+@keyframes title-breathe {
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.028)}
+}
+@keyframes title-neon {
+  0%,100%{opacity:1;filter:brightness(1)}
+  15%    {filter:brightness(1.06)}
+  45%    {filter:brightness(.95)}
+  60%    {filter:brightness(1.05)}
+  70%    {opacity:1;filter:brightness(1)}
+  71%    {opacity:.45;filter:brightness(1.9)}
+  72%    {opacity:1;filter:brightness(1.2)}
+  74%    {opacity:.1;filter:brightness(2.4)}
+  75%    {opacity:1;filter:brightness(1.35)}
+  78%    {opacity:.65;filter:brightness(1.7)}
+  80%    {opacity:1;filter:brightness(1)}
+}
+@keyframes title-wave {
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  25%{transform:translateY(-5px) rotate(-.8deg)}
+  75%{transform:translateY(4px) rotate(.6deg)}
+}
+@keyframes title-glitch {
+  0%,100%{transform:none;filter:none}
+  10%{transform:translateX(-5px) skewX(-3deg);filter:hue-rotate(90deg) brightness(1.4)}
+  20%{transform:translateX(5px) skewX(3deg);filter:hue-rotate(-60deg) brightness(.8)}
+  35%{transform:translateX(-3px);filter:hue-rotate(180deg)}
+  50%{transform:translateX(2px) skewX(1deg);filter:hue-rotate(-30deg) brightness(1.2)}
+  65%{transform:none;filter:none}
+}
+.title[data-anim="rage"]   {animation:title-rage    .55s linear infinite}
+.title[data-anim="breathe"]{animation:title-breathe 3.5s ease-in-out infinite}
+.title[data-anim="neon"]   {animation:title-neon    6s linear infinite}
+.title[data-anim="wave"]   {animation:title-wave    2.8s ease-in-out infinite}
+.title.glitching           {animation:title-glitch  .6s ease-out forwards!important}
+
+/* ─── Easter egg modal ──────────────────────────────────────────────── */
+.ee-back{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;z-index:200}
+@keyframes ee-back-in{from{opacity:0}to{opacity:1}}
+@keyframes ee-card-in{
+  0%  {opacity:0;transform:scale(.65) translateY(28px)}
+  65% {transform:scale(1.04) translateY(-3px)}
+  85% {transform:scale(.98) translateY(1px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+@keyframes ee-badge-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.ee-back{animation:ee-back-in .2s ease-out}
+.ee-card{background:var(--card-bg);border:1px solid var(--border);border-radius:22px;padding:28px 22px 22px;max-width:360px;width:100%;position:relative;z-index:1;text-align:center;animation:ee-card-in .55s cubic-bezier(.175,.885,.32,1.275) both;box-shadow:0 32px 80px rgba(0,0,0,.5),0 0 0 1px var(--border)}
+
+/* ─── Easter egg particles ──────────────────────────────────────────── */
+.ee-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.ee-p{position:absolute;top:-60px;will-change:transform;line-height:1;user-select:none}
+@keyframes p-fall{
+  0%  {transform:translateY(0) translateX(0) rotate(0deg) scale(1);opacity:0}
+  6%  {opacity:1}
+  30% {transform:translateY(30vh) translateX(12px) rotate(200deg) scale(.95)}
+  65% {transform:translateY(65vh) translateX(-8px) rotate(400deg) scale(.9);opacity:.85}
+  100%{transform:translateY(115vh) translateX(6px) rotate(600deg) scale(.8);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){.ee-p{animation:none!important}}
+.ee-x{position:absolute;top:14px;right:14px;background:var(--card-bg2);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:14px;color:var(--text-mute);display:flex;align-items:center;justify-content:center;transition:.15s;font-family:inherit;line-height:1}
+.ee-x:hover{color:var(--text);border-color:var(--border-hover);background:var(--card-bg)}
+.ee-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);background:var(--accent-fade);padding:4px 11px;border-radius:99px;margin-bottom:20px;animation:ee-badge-pulse 2s ease-in-out infinite}
+.ee-avatar-wrap{margin:0 auto 16px;width:96px;height:96px;border-radius:50%;padding:3px;background:linear-gradient(135deg,#ff4060,#ff8030,#c060ff,#6060ff)}
+.ee-avatar-inner{width:100%;height:100%;border-radius:50%;background:var(--card-bg);display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
+/* To add your photo: replace the inner content with <img src="photo.jpg" class="ee-img"> */
+.ee-img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ee-ph{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ee-ph-lbl{font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mute);margin-top:2px;line-height:1}
+.ee-name{font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.025em;margin-bottom:3px}
+.ee-role{font-size:11px;color:var(--text-mute);letter-spacing:.05em;margin-bottom:16px;font-weight:500;text-transform:uppercase}
+.ee-bio{font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:20px;text-align:left}
+.ee-links{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.ee-link{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border:1px solid var(--border);border-radius:12px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;transition:.2s;background:var(--card-bg2);letter-spacing:.01em}
+.ee-link:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-fade);transform:translateY(-1px)}
+.ee-link svg{flex-shrink:0;width:16px;height:16px;opacity:.75}
+.ee-link:hover svg{opacity:1}
+.ee-footer{font-size:12px;color:var(--text-dim);line-height:1.5}
+
+/* ─── Confirm modal ─────────────────────────────────────────────────── */
+.conf-card{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:24px 20px 20px;max-width:300px;width:100%;position:relative;text-align:center;animation:ee-card-in .35s cubic-bezier(.175,.885,.32,1.275) both;box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px var(--border)}
+.conf-icon{font-size:28px;margin-bottom:10px;display:block}
+.conf-msg{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:20px;font-weight:500}
+.conf-btns{display:flex;gap:10px}
+.conf-btns .abtn{margin:0;flex:1;padding:12px}
+
+/* ─── Settings tab: ambient glitch ─────────────────────────────────── */
+@keyframes title-settings {
+  0%,82%,100%{transform:none;filter:none;opacity:1}
+  83%{transform:translateX(-5px) skewX(-2.5deg);filter:hue-rotate(80deg) brightness(1.5)}
+  84%{transform:translateX(6px);filter:hue-rotate(-55deg) brightness(.8);clip-path:inset(0 0 58% 0)}
+  85%{transform:translateX(-3px) skewX(2deg);filter:hue-rotate(150deg) brightness(1.3);clip-path:inset(42% 0 0 0)}
+  86%{transform:translateX(4px);filter:none;clip-path:none;opacity:.8}
+  87%{transform:none;filter:hue-rotate(240deg) brightness(1.7);opacity:1}
+  88%{transform:translateX(-4px) skewX(-1deg);filter:hue-rotate(30deg)}
+  89%{transform:none;filter:none;opacity:.9}
+  90%{transform:translateX(2px);filter:hue-rotate(-20deg) brightness(1.1);opacity:1}
+  91%{transform:none;filter:none}
+}
+/* Cataract: base brightness(.72) baked into every keyframe */
+@keyframes title-settings-light {
+  0%,82%,100%{transform:none;filter:brightness(.72) saturate(1.15);opacity:1}
+  83%{transform:translateX(-5px) skewX(-2.5deg);filter:brightness(.52) saturate(1.3) hue-rotate(60deg)}
+  84%{transform:translateX(6px);filter:brightness(.82) saturate(1.1) hue-rotate(-45deg);clip-path:inset(0 0 58% 0)}
+  85%{transform:translateX(-3px) skewX(2deg);filter:brightness(.46) saturate(1.4) hue-rotate(130deg);clip-path:inset(42% 0 0 0)}
+  86%{transform:translateX(4px);filter:brightness(.72) saturate(1.15);clip-path:none;opacity:.8}
+  87%{transform:none;filter:brightness(.58) saturate(1.25) hue-rotate(200deg);opacity:1}
+  88%{transform:translateX(-4px) skewX(-1deg);filter:brightness(.76) saturate(1.2) hue-rotate(25deg)}
+  89%{transform:none;filter:brightness(.72) saturate(1.15);opacity:.9}
+  90%{transform:translateX(2px);filter:brightness(.78) saturate(1.18) hue-rotate(-15deg);opacity:1}
+  91%{transform:none;filter:brightness(.72) saturate(1.15)}
+}
+.title[data-anim="settings"]                          {animation:title-settings       9s linear infinite}
+:root[data-theme="light"] .title[data-anim="settings"]{animation:title-settings-light 9s linear infinite}
+/* ─── Logo per-theme contrast tuning ───────────────────────────────── */
+/* Cataract: darken gradient so it pops on cream background */
+:root[data-theme="light"] .title{filter:brightness(.72) saturate(1.15)}
+/* Eyeball-friendly: slight boost on near-black bg */
+:root[data-theme="dark-og"] .title{filter:brightness(1.08)}
+/* Cataract: neon animation uses brightness() — cap it so logo doesn't wash out */
+:root[data-theme="light"] .title[data-anim="neon"]{animation:title-neon-light 6s linear infinite}
+@keyframes title-neon-light{
+  0%,100%{filter:brightness(.72) saturate(1.15)}
+  15%    {filter:brightness(.78) saturate(1.2)}
+  45%    {filter:brightness(.68) saturate(1.1)}
+  60%    {filter:brightness(.76) saturate(1.15)}
+  70%    {filter:brightness(.72) saturate(1.15)}
+  71%    {filter:brightness(.56) saturate(1.3)}
+  72%    {filter:brightness(.82) saturate(1.2)}
+  74%    {filter:brightness(.40) saturate(1.4)}
+  75%    {filter:brightness(.88) saturate(1.25)}
+  78%    {filter:brightness(.62) saturate(1.3)}
+  80%    {filter:brightness(.72) saturate(1.15)}
+}
+/* ─── Auth screen ───────────────────────────────────────────────────── */
+.auth-screen{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom))}
+.auth-box{width:100%;max-width:380px;text-align:center}
+.auth-card{width:100%;max-width:400px;background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:24px 20px;margin-top:20px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.auth-tabs{display:flex;gap:3px;background:var(--card-bg2);border-radius:10px;padding:3px;margin-bottom:20px}
+.auth-tab{flex:1;padding:8px;font-size:13px;font-weight:600;border:none;border-radius:8px;background:transparent;color:var(--text-dim);cursor:pointer;font-family:inherit;transition:.15s}
+.auth-tab.on{background:var(--card-bg);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.auth-err{font-size:13px;color:var(--danger);padding:10px 14px;border-radius:10px;min-height:18px;margin-bottom:14px;background:var(--accent-fade);line-height:1.5}
+.auth-err:empty{display:none}
+.auth-sub-note{font-size:11px;color:var(--text-mute);text-align:center;margin-top:12px;line-height:1.5}
+.auth-lang{display:flex;justify-content:center;gap:6px;margin-top:16px}
+.auth-lang-btn{background:transparent;border:1px solid transparent;font-size:12px;color:var(--text-mute);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;transition:.15s}
+.auth-lang-btn.on{color:var(--text);background:var(--card-bg2);border-color:var(--border)}
+/* ─── Sync status bar ───────────────────────────────────────────────── */
+.sync-bar{font-size:11px;text-align:center;padding:3px 0;min-height:20px;transition:opacity .3s;line-height:1.5}
+.sync-bar.offline{color:var(--danger)}
+.sync-bar.syncing{color:var(--accent)}
+.sync-bar.pending{color:var(--text-mute)}
+/* ─── Account section in settings ──────────────────────────────────── */
+.auth-email-badge{font-size:13px;color:var(--text-dim);padding:10px 14px;background:var(--card-bg2);border-radius:10px;margin-bottom:10px;word-break:break-all}
+/* ─── Sync badge ────────────────────────────────────────────────────── */
+.sync-badge{font-size:14px;cursor:default;opacity:.75;flex-shrink:0;line-height:1}
+/* ─── Account section ───────────────────────────────────────────────── */
+.user-email{font-size:13px;color:var(--text-dim);padding:10px 0 14px;word-break:break-all}
+.pwa-hint{position:fixed;bottom:max(16px,calc(12px + env(safe-area-inset-bottom)));left:50%;width:calc(100% - 32px);max-width:448px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.32),0 0 0 1px var(--border);z-index:150;display:flex;flex-direction:column;gap:10px;transition:transform .38s cubic-bezier(.175,.885,.32,1.275),opacity .3s ease}
+.pwa-hint.show{transform:translateX(-50%) translateY(0);opacity:1;pointer-events:auto}
+.pwa-row{display:flex;align-items:flex-start;gap:12px}
+.pwa-icon{font-size:26px;flex-shrink:0;line-height:1}
+.pwa-text{flex:1;min-width:0}
+.pwa-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;letter-spacing:-.01em}
+.pwa-body{font-size:12px;color:var(--text-dim);line-height:1.6}
+.pwa-body strong{color:var(--text);font-weight:700}
+.pwa-x{background:none;border:none;cursor:pointer;color:var(--text-mute);font-size:16px;padding:0 0 0 8px;flex-shrink:0;line-height:1;font-family:inherit;transition:.15s}
+.pwa-x:hover{color:var(--text)}
+.pwa-note{font-size:11px;color:var(--success);background:rgba(62,207,142,.1);padding:7px 10px;border-radius:9px;line-height:1.5}
+.pwa-btns{display:flex;gap:8px}
+.pwa-later{flex:1;padding:9px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--text-dim);cursor:pointer;font-family:inherit;transition:.15s}
+.pwa-later:hover{border-color:var(--border-hover);color:var(--text)}
+.pwa-install{flex:1;padding:9px;font-size:12px;font-weight:700;border:none;border-radius:9px;background:var(--accent);color:var(--btn-primary-text);cursor:pointer;font-family:inherit;transition:.15s}
+.pwa-install:hover{filter:brightness(1.1)}
+/* ≤360px — older Androids, iPhone SE: tighter spacing */
+@media (max-width:360px) {
+  .card  {padding:15px 13px}
+  .mnav  {padding:10px 12px}
+  .sbox  {padding:13px}
+  .tab   {font-size:10px;padding:8px 1px}
+  .abtn  {padding:11px;font-size:13px}
+  .cb    {padding:9px 6px;font-size:12px}
+  .fg    {margin-bottom:11px}
+  .sec   {margin-bottom:18px}
+  .edit-box{padding:13px}
+  .ee-card  {padding:20px 14px 16px}
+  .conf-card{padding:20px 16px 16px}
+  .conf-btns .abtn{padding:10px;font-size:13px}
+  .ee-avatar-wrap{width:80px;height:80px}
+  .ee-name {font-size:16px}
+  .ee-bio  {font-size:12px}
+}
+/* ≥481px — small tablets / landscape phones */
+@media (min-width:481px) {
+  body {padding-top:28px}
+}
+/* ≥700px — desktop: single column, just wider */
+@media (min-width:700px) {
+  body {padding:40px clamp(24px,4vw,48px) 60px}
+  .w {max-width:860px}
+  .title {font-size:clamp(34px,4.8vw,52px)}
+  .subtitle {font-size:13px;margin-bottom:32px}
+  .card {padding:24px 28px}
+  .mnav {padding:14px 20px}
+  .big {font-size:clamp(22px,3vw,28px)}
+  .balance-val {font-size:clamp(18px,2.4vw,22px)}
+}
+</style>
+</head>
+<body>
+<!-- ─── Auth screen ────────────────────────────────────────────────── -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-box">
+    <h1 class="title" style="margin-bottom:6px">WTFIMM?!</h1>
+    <p class="subtitle" id="auth-subtitle">(Where The F*ck Is My Money?!)</p>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="tab-login"  onclick="setAuthMode('login')">Войти</button>
+        <button class="auth-tab"    id="tab-reg"    onclick="setAuthMode('register')">Регистрация</button>
+      </div>
+      <div class="fg">
+        <label class="fl">Email</label>
+        <input type="email" id="auth-email" autocomplete="email" placeholder="you@example.com"
+               onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div class="fg">
+        <label class="fl" id="auth-pass-lbl">Пароль</label>
+        <input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div class="fg" id="auth-pass2-fg" style="display:none">
+        <label class="fl" id="auth-pass2-lbl">Повторите пароль</label>
+        <input type="password" id="auth-pass2" autocomplete="new-password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+      <button class="abtn" id="auth-btn" onclick="doAuth()">Войти →</button>
+      <p class="auth-sub-note" id="auth-sub-note"></p>
+    </div>
+    <div class="auth-lang">
+      <button class="auth-lang-btn on" id="auth-lang-ru" onclick="setLang('ru')">🇷🇺 Рус</button>
+      <button class="auth-lang-btn"    id="auth-lang-en" onclick="setLang('en')">🇬🇧 Eng</button>
+    </div>
+  </div>
+</div>
+
+<div class="bg" aria-hidden="true">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div class="w" id="main-app">
+  <h1 class="title" id="logo" onclick="onLogoTap()">WTFIMM?!</h1>
+  <p class="subtitle" id="subtitle-el">(Where The F*ck Is My Money?!)</p>
+  <div class="sync-bar" id="sync-bar"></div>
+  <div id="app"><div class="emp">⟳</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  I18N
+ * ═══════════════════════════════════════════════════════════════════════ */
+const I18N = {
+  ru: {
+    expense:"Расход", income:"Доход", balance:"Остаток",
+    records:"записей", sumUnit:"сум",
+    today:"сегодня", yesterday:"вчера", daysAgo:"дн. назад",
+    tabDash:"📊 Обзор", tabAdd:"➕ Добавить", tabLog:"📋 Журнал", tabSum:"📤 Сводка", tabSet:"⚙️",
+    addingTo:"Добавление в:",
+    formType:"Тип записи", formCat:"Категория", formCur:"Валюта",
+    formAmt:"Сумма", formDate:"Дата", formNote:"Заметка (необязательно)",
+    typeExp:"💸 Расход", typeInc:"💰 Доход",
+    phUzs:"например 45000", phUsd:"например 900",
+    enterUsd:"введи сумму в долларах",
+    addExpBtn:"Добавить расход →", addIncBtn:"Добавить доход →",
+    saveChangesBtn:"Сохранить изменения", cancelBtn:"Отмена",
+    editingIncome:"Редактирование дохода",
+    editingExpense:"Редактирование расхода",
+    rateAtTime:"Курс на момент дохода:",
+    rateLocked:"🔒 Курс зафиксирован:",
+    rateCurrent:"Текущий курс ЦБ:",
+    rateWillLock:"Этот курс будет зафиксирован для этой записи",
+    logEmpty:"Журнал пуст",
+    dashEmpty:"Нет данных за этот месяц.<br>Добавь первый расход или доход →",
+    delete:"Удалить", edit:"редактировать", deleteConfirm:"Удалить эту запись?",
+    deleteIncConfirm:"Удалить эту статью дохода?",
+    sumNoData:"Безработный?",
+    sumIncome:"💰 ДОХОД:", sumExpense:"💸 РАСХОД:", sumBalance:"📈 ОСТАТОК:",
+    sumRate:"Курс:", sumWhere:"Вот, бл*дь, твои деньги:", sumTotal:"Категорий:",
+    sumNoIncome:"(нет записей)",
+    copyBtn:"📋 Скопировать сводку",
+    setLang:"Язык интерфейса", setTheme:"Тема оформления", setCats:"Категории",
+    setAccount:"Аккаунт", signOut:"Выйти из аккаунта",
+    themeDark:"😎 Gen Z", themeDarkOg:"👁️ Бережем яблоки", themeLight:"🫠 Катаракта",
+    setAddCat:"+ Добавить категорию", setNewCat:"Новая категория", setEditCat:"Редактировать",
+    setEmoji:"Эмодзи", setName:"Название", setColor:"Цвет",
+    setSave:"Сохранить", setCancel:"Отмена", setAdd:"Добавить",
+    delCatNoExp:"Удалить категорию?",
+    delCatWithExp:"В этой категории {n} {w}. Они будут перенесены в «Прочее». Продолжить?",
+    delCatProtected:"«Прочее» нельзя удалить — это резервная категория.",
+    emojiHint:"или введи свой эмодзи:",
+    rec1:"запись", rec2:"записи", rec5:"записей",
+    tSaved:"✅ Сохранено!", tDeleted:"🗑 Удалено", tCopied:"📋 Скопировано!",
+    tEnterAmt:"⚠️ Введи сумму", tEnterName:"⚠️ Введи название", tEnterEmoji:"⚠️ Выбери эмодзи",
+    tCatAdded:"✅ Категория добавлена", tCatDeleted:"🗑 Категория удалена", tCatUpdated:"✅ Категория обновлена",
+    tIncSaved:"💰 Доход сохранён", tIncUpdated:"✅ Доход обновлён", tIncDeleted:"🗑 Доход удалён",
+    tThemeChanged:"🎨 Тема изменена",
+    newCatPh:"Например: Спорт",
+    incLabel:"💰 Доход",
+    subtitle:"(Где, бл*дь, мои деньги?!)",
+    eeRole:"Финансово безответственный",
+    eeName:"Александр Морозов",
+    eeBio:"WTFIMM?! вырос из нескольких поздних вечеров и одного вопроса: куда, собственно, деваются деньги? Excel надоел, готовых решений не нашлось — написал своё.<br><br>Делаю штуки для веба — иногда они даже работают с первого раза. Кто докопался до этой пасхалки — тот мой человек.",
+    eeFooter:"{n} тапов по лого. Уважаю. 🫡",
+    eeBadge:"🥚 Пасхалка",
+  },
+  en: {
+    expense:"Expense", income:"Income", balance:"Balance",
+    records:"records", sumUnit:"sum",
+    today:"today", yesterday:"yesterday", daysAgo:"days ago",
+    tabDash:"📊 Overview", tabAdd:"➕ Add", tabLog:"📋 Log", tabSum:"📤 Summary", tabSet:"⚙️",
+    addingTo:"Adding to:",
+    formType:"Entry type", formCat:"Category", formCur:"Currency",
+    formAmt:"Amount", formDate:"Date", formNote:"Note (optional)",
+    typeExp:"💸 Expense", typeInc:"💰 Income",
+    phUzs:"e.g. 45000", phUsd:"e.g. 900",
+    enterUsd:"enter amount in USD",
+    addExpBtn:"Add expense →", addIncBtn:"Add income →",
+    saveChangesBtn:"Save changes", cancelBtn:"Cancel",
+    editingIncome:"Editing income entry",
+    editingExpense:"Editing expense",
+    rateAtTime:"Rate at time of income:",
+    rateLocked:"🔒 Rate locked at:",
+    rateCurrent:"Current rate:",
+    rateWillLock:"This rate will be locked for this entry",
+    logEmpty:"Log is empty",
+    dashEmpty:"No data for this month.<br>Add the first expense or income →",
+    delete:"Delete", edit:"edit", deleteConfirm:"Delete this record?",
+    deleteIncConfirm:"Delete this income entry?",
+    sumNoData:"Unemployed?",
+    sumIncome:"💰 INCOME:", sumExpense:"💸 EXPENSE:", sumBalance:"📈 BALANCE:",
+    sumRate:"Rate:", sumWhere:"Here's your f*cking money:", sumTotal:"Categories:",
+    sumNoIncome:"(no entries)",
+    copyBtn:"📋 Copy summary",
+    setLang:"Interface language", setTheme:"Theme", setCats:"Categories",
+    setAccount:"Account", signOut:"Sign out",
+    themeDark:"😎 Gen Z", themeDarkOg:"👁️ Eyeball-friendly", themeLight:"🫠 Cataract",
+    setAddCat:"+ Add category", setNewCat:"New category", setEditCat:"Edit",
+    setEmoji:"Emoji", setName:"Name", setColor:"Color",
+    setSave:"Save", setCancel:"Cancel", setAdd:"Add",
+    delCatNoExp:"Delete this category?",
+    delCatWithExp:"This category has {n} {w}. They will be moved to «Other». Continue?",
+    delCatProtected:"«Other» cannot be deleted — it's the fallback category.",
+    emojiHint:"or type your own emoji:",
+    rec1:"record", rec2:"records", rec5:"records",
+    tSaved:"✅ Saved!", tDeleted:"🗑 Deleted", tCopied:"📋 Copied!",
+    tEnterAmt:"⚠️ Enter amount", tEnterName:"⚠️ Enter name", tEnterEmoji:"⚠️ Pick an emoji",
+    tCatAdded:"✅ Category added", tCatDeleted:"🗑 Category deleted", tCatUpdated:"✅ Category updated",
+    tIncSaved:"💰 Income saved", tIncUpdated:"✅ Income updated", tIncDeleted:"🗑 Income deleted",
+    tThemeChanged:"🎨 Theme changed",
+    newCatPh:"e.g. Sports",
+    incLabel:"💰 Income",
+    subtitle:"(Where The F*ck Is My Money?!)",
+    eeRole:"Financially Irresponsible",
+    eeName:"Alexander Morozov",
+    eeBio:"Built WTFIMM?! in a few late-night sessions because spreadsheets don't spark joy and budgeting apps are boring as hell.<br><br>I ship things for the web — sometimes they even work on the first try. If you dug deep enough to find this, you're my kind of person.",
+    eeFooter:"You tapped the logo {n} time{s}. Respect. 🫡",
+    eeBadge:"🥚 Easter egg",
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Note phrase pools (random placeholder for note field)
+ * ═══════════════════════════════════════════════════════════════════════ */
+const NOTE_PHRASES = {
+  ru: [
+    "Ну я же заслужил",
+    "Терапия дешевле не бывает",
+    "Налог на быть взрослым",
+    "Меня заколдовал маркетинг",
+    "Это всё ради здоровья (нет)",
+    "Не считаем, праздник",
+    "Финансовое самобичевание",
+    "Зачем я это купил...",
+    "Импульс сильнее меня",
+    "Выживать дорого",
+    "Зато вкусно было",
+    "Оправдания закончились",
+    "Лучше потратить чем потерять",
+    "Налог за быть живым",
+    "Комфорт-шопинг как лекарство",
+    "Деньги любят счёт, а я их не очень",
+    "Ну хоть кофе нормальный",
+    "Взрослая жизнь дорогая",
+    "Продавцу спасибо, кошельку нет",
+    "Плакал, но платил",
+    "Это была инвестиция в настроение",
+    "Сэкономил — потратил",
+    "Купил, чтобы поднять настроение",
+    "Доставка решает",
+    "Ну купил, ну зачем",
+    "Очередная подписка",
+    "Карта плачет, я смеюсь",
+  ],
+  en: [
+    "I earned this (did I?)",
+    "Therapy is way more expensive",
+    "Adulting tax: paid",
+    "Marketing got me again",
+    "Future me will handle it",
+    "Coffee is a love language",
+    "Treat yo self",
+    "Existence is expensive",
+    "Why did I buy this...",
+    "Impulse > willpower",
+    "Comfort spending hits different",
+    "It sparked joy. Briefly.",
+    "3am Amazon strikes again",
+    "Worth it. Probably.",
+    "Tax on being alive",
+    "Survival mode purchase",
+    "Pretending this was planned",
+    "Money likes counting, I don't",
+    "I deserve this. Maybe.",
+    "Said yes to dessert again",
+    "Funded a brief moment of joy",
+    "Card cried, I smiled",
+    "Adulting is paying for nothing",
+    "Cost of being a person",
+    "Another vampire subscription",
+    "Delivery fee, regret free",
+    "Rich for a moment",
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Default categories
+ * ═══════════════════════════════════════════════════════════════════════ */
+const DEFAULT_CATS = [
+  {id:"mandatory",    e:"📌", n_ru:"Обязательные",       n_en:"Mandatory",          c:"#6366f1"},
+  {id:"groceries",    e:"🛒", n_ru:"Продукты",            n_en:"Groceries",          c:"#1D9E75"},
+  {id:"snacks",       e:"🍬", n_ru:"Снеки и напитки",    n_en:"Snacks & drinks",    c:"#EF9F27"},
+
+  {id:"eating",       e:"🍔", n_ru:"Кафе / Фастфуд",     n_en:"Cafe / Fast food",   c:"#c0392b"},
+  {id:"beauty",       e:"💄", n_ru:"Красота / Уход",      n_en:"Beauty / Care",      c:"#D4537E"},
+  {id:"transport",    e:"🚗", n_ru:"Дорожные",            n_en:"Transport",          c:"#7f8c8d"},
+  {id:"transport_o",  e:"🤝", n_ru:"Дорожные другим",     n_en:"Transport for others",c:"#0F6E56"},
+  {id:"family",       e:"❤️", n_ru:"Семья / Помощь",      n_en:"Family / Help",      c:"#993556"},
+  {id:"household",    e:"🏠", n_ru:"Быт / Хозтовары",    n_en:"Household",          c:"#639922"},
+  {id:"health",       e:"💊", n_ru:"Здоровье / Аптека",   n_en:"Health / Pharmacy",  c:"#3B6D11"},
+  {id:"pets",         e:"🐾", n_ru:"Питомцы",             n_en:"Pets",               c:"#BA7517"},
+  {id:"gifts",        e:"🎁", n_ru:"Подарки / Цветы",     n_en:"Gifts / Flowers",    c:"#ec4899"},
+  {id:"subscriptions",e:"📱", n_ru:"Подписки",            n_en:"Subscriptions",      c:"#0ea5e9"},
+  {id:"gaming",       e:"🎮", n_ru:"Видеоигры",           n_en:"Video games",        c:"#7c3aed"},
+  {id:"shopping",     e:"🛍️", n_ru:"Покупки (разовые)",  n_en:"Shopping (one-time)",c:"#534AB7"},
+  {id:"other",        e:"💭", n_ru:"Прочее",              n_en:"Other",              c:"#555568"},
+];
+
+const MONTHS_META = [
+  {num:1,ru:"Январь",en:"January"},  {num:2,ru:"Февраль",en:"February"},
+  {num:3,ru:"Март",en:"March"},      {num:4,ru:"Апрель",en:"April"},
+  {num:5,ru:"Май",en:"May"},         {num:6,ru:"Июнь",en:"June"},
+  {num:7,ru:"Июль",en:"July"},       {num:8,ru:"Август",en:"August"},
+  {num:9,ru:"Сентябрь",en:"September"},{num:10,ru:"Октябрь",en:"October"},
+  {num:11,ru:"Ноябрь",en:"November"},{num:12,ru:"Декабрь",en:"December"},
+];
+/* Dynamic month helpers — no year restriction */
+function mid(){ return `${curYear}_${String(curMonth).padStart(2,"0")}`; }
+function curM(){
+  const meta = MONTHS_META.find(m => m.num === curMonth) || {ru:String(curMonth),en:String(curMonth)};
+  return { id:mid(), num:curMonth, ru:meta.ru, en:meta.en };
+}
+function ensureMonth(id){
+  if (!id) id = mid();
+  let needsFetch = false;
+  if (exps[id] === undefined){
+    const s = LS.get(ek(id));
+    exps[id] = (s && Array.isArray(s)) ? s : [];
+    if (!s) LS.set(ek(id), exps[id]);
+    needsFetch = true;
+  }
+  if (incs[id] === undefined){
+    const s = LS.get(ik(id));
+    incs[id] = (s && Array.isArray(s)) ? s : [];
+    if (!s) LS.set(ik(id), incs[id]);
+    needsFetch = true;
+  }
+  // Background refresh from Supabase if either side was missing
+  if (needsFetch && isOnline && currentUser) {
+    loadMonthFromSupabase(id).then(() => { if (mid() === id) render(); }).catch(()=>{});
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Seed data
+ * ═══════════════════════════════════════════════════════════════════════ */
+const MAY_SEED_EXP = [];
+const MAY_SEED_INC = [];
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Pickers
+ * ═══════════════════════════════════════════════════════════════════════ */
+const EMOJI_GRID = [
+  "🛒","🍬","🚬","🍔","🥤","💄","🚗","🤝","❤️","🏠","💊","🐾","🎁","📱","🎮","🛍️",
+  "📌","💰","💵","💸","💳","🏦","📈","📉","🎯","⭐","✨","💎","🔥","🎉","🎊","🎈",
+  "🍕","🍣","🍜","🍰","🍪","☕","🍺","🍷","🌮","🥗","🍎","🍌","🥑","🥕","🍞","🥩",
+  "🎬","🎭","🎨","🎲","🎵","🎸","🎤","📚","📖","✏️","💻","📷","🎙️","📺","🎥","🎧",
+  "✈️","🚕","🚌","🚆","🚲","⛽","🏨","🏖️","🏔️","🌍","🌊","🏄","⛺","🗺️","🎒","🏕️",
+  "👕","👟","👔","👜","💼","📞","📅","📊","🔧","🛠️","💡","🔑","🛡️","📋","🧴","💉",
+  "🏥","🦷","👶","🎓","🏆","🥇","🛌","☀️","🌙","⛅","🌧️","⚡","🌈","🌸","🌳","💭"
+];
+const COLOR_GRID = [
+  "#6366f1","#1D9E75","#EF9F27","#888780","#c0392b","#D4537E","#7f8c8d",
+  "#0F6E56","#993556","#639922","#3B6D11","#BA7517","#ec4899","#0ea5e9",
+  "#7c3aed","#534AB7","#3ecf8e","#f06060"
+];
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Storage
+ * ═══════════════════════════════════════════════════════════════════════ */
+const LS = {
+  get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
+};
+const ek = id => "tracker_exp_"+id;
+const ik = id => "tracker_inc_"+id;
+const RK = "tracker_rate_v1";
+const CK = "tracker_cats_v2";
+const LK = "tracker_lang_v1";
+const TK = "tracker_theme_v1";
+const PENDING_KEY = "tracker_pending_ops";
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Supabase client
+ * ═══════════════════════════════════════════════════════════════════════ */
+const SUPA_URL = "https://lmfvncwaanpccjgsowgx.supabase.co";
+const SUPA_KEY = "sb_publishable_PuABu8FQN5ZYFi_DaB3BoA_OwgCmrzQ";
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  State
+ * ═══════════════════════════════════════════════════════════════════════ */
+let lang = "ru";
+let theme = "dark";
+let cats = [];
+let exps = {};
+let incs = {};
+let curYear  = new Date().getFullYear();
+let curMonth = new Date().getMonth() + 1;
+let showMonthPicker = false;
+let pickerYear = curYear;
+let swipedItemId = null;
+let view = "dash";
+let curSel = "uzs";
+// ── Auth & sync state ──────────────────────────────────────────────
+let currentUser  = null;   // Supabase User object
+let isOnline     = navigator.onLine;
+let isSyncing    = false;
+let authMode     = "login"; // "login" | "register"
+let addType = "exp";  // "exp" or "inc"
+let rate = 12900;
+let rateTs = null;
+let rateBusy = false;
+let editingCatId = null;
+let newCatMode = false;
+let editEmoji = "";
+let editName = "";
+let editColor = "";
+let editingIncomeId = null;
+let editingIncomeMonth = null;
+let editingExpId = null;
+let editingExpMonth = null;
+let currentNotePh = "";
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Utilities
+ * ═══════════════════════════════════════════════════════════════════════ */
+const t = k => I18N[lang]?.[k] || k;
+const monthLabel = m => `${m[lang]} ${curYear}`;
+const fmt = n => new Intl.NumberFormat(lang==="ru"?"ru-RU":"en-US").format(Math.round(n));
+const tod = () => new Date().toISOString().slice(0,10);
+const catById = id => cats.find(c => c.id===id) || cats.find(c => c.id==="other") || cats[0];
+const catName = c => c ? (c[`n_${lang}`] || c.n_ru || c.n_en || "?") : "?";
+const escHTML = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+function recWord(n) {
+  if (lang === "en") return n === 1 ? t("rec1") : t("rec5");
+  const m100 = Math.abs(n) % 100, m10 = Math.abs(n) % 10;
+  if (m100 >= 11 && m100 <= 14) return t("rec5");
+  if (m10 === 1) return t("rec1");
+  if (m10 >= 2 && m10 <= 4) return t("rec2");
+  return t("rec5");
+}
+
+function pickNotePh() {
+  const pool = NOTE_PHRASES[lang] || NOTE_PHRASES.ru;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function stats(id) {
+  const expList = exps[id] || [];
+  const incList = incs[id] || [];
+  const bc = {};
+  expList.forEach(e => { bc[e.catId] = (bc[e.catId] || 0) + e.amount; });
+  const expTotal = expList.reduce((s,e) => s+e.amount, 0);
+  const incTotal = incList.reduce((s,e) => s+e.amount, 0);
+  return { expTotal, incTotal, bc, expList, incList, balance: incTotal - expTotal };
+}
+
+function expTotalUsd(list) {
+  let totalUsd = 0;
+  for (const exp of list) {
+    if (exp.usd != null) totalUsd += exp.usd;
+    else totalUsd += exp.amount / rate;
+  }
+  return Math.round(totalUsd);
+}
+
+function incTotalUsd(list) {
+  let totalUsd = 0;
+  for (const inc of list) {
+    if (inc.usd != null) totalUsd += inc.usd;
+    else if (inc.rate) totalUsd += inc.amount / inc.rate;
+    else totalUsd += inc.amount / rate;
+  }
+  return Math.round(totalUsd);
+}
+
+function balanceUsd(incList, expList) {
+  return incTotalUsd(incList) - expTotalUsd(expList);
+}
+
+function showToast(msg, err=false) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.toggle("err", err);
+  el.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+let _confirmCb = null;
+function showConfirm(msg, onYes, icon) {
+  _confirmCb = onYes;
+  const modal  = document.getElementById("confirm-modal");
+  const msgEl  = document.getElementById("confirm-msg");
+  const iconEl = document.getElementById("confirm-icon");
+  const yesBtn = document.getElementById("confirm-yes");
+  const noBtn  = document.getElementById("confirm-no");
+  if (msgEl)  msgEl.textContent  = msg;
+  if (iconEl) iconEl.textContent = icon || "🗑️";
+  if (yesBtn) yesBtn.textContent = t("delete");
+  if (noBtn)  noBtn.textContent  = t("cancelBtn");
+  if (modal)  { modal.style.display = "flex"; document.body.style.overflow = "hidden"; }
+}
+function closeConfirm(confirmed) {
+  const modal = document.getElementById("confirm-modal");
+  if (modal) { modal.style.display = "none"; document.body.style.overflow = ""; }
+  if (confirmed && _confirmCb) _confirmCb();
+  _confirmCb = null;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Auth functions
+ * ═══════════════════════════════════════════════════════════════════════ */
+function showAuthScreen() {
+  const el = document.getElementById("auth-screen");
+  if (el) el.style.display = "flex";
+  updateAuthUI();
+}
+function hideAuthScreen() {
+  const el = document.getElementById("auth-screen");
+  if (el) el.style.display = "none";
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById("tab-login")?.classList.toggle("on", mode === "login");
+  document.getElementById("tab-reg")?.classList.toggle("on", mode === "register");
+  const p2 = document.getElementById("auth-pass2-fg");
+  if (p2) p2.style.display = mode === "register" ? "block" : "none";
+  const pass = document.getElementById("auth-pass");
+  if (pass) pass.autocomplete = mode === "login" ? "current-password" : "new-password";
+  document.getElementById("auth-err").textContent = "";
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const ru = lang === "ru";
+  const el = id => document.getElementById(id);
+  const set = (id, txt) => { const e = el(id); if (e) e.textContent = txt; };
+  set("tab-login",  ru ? "Войти" : "Sign in");
+  set("tab-reg",    ru ? "Регистрация" : "Sign up");
+  set("auth-pass-lbl", ru ? "Пароль" : "Password");
+  set("auth-pass2-lbl", ru ? "Повторите пароль" : "Repeat password");
+  set("auth-subtitle", ru ? "(Где, бл*дь, мои деньги?!)" : "(Where The F*ck Is My Money?!)");
+  set("auth-btn", authMode === "login"
+    ? (ru ? "Войти →" : "Sign in →")
+    : (ru ? "Создать аккаунт →" : "Create account →"));
+  set("auth-sub-note", authMode === "register"
+    ? (ru ? "Уже есть аккаунт? Нажми «Войти»" : "Already have an account? Tap «Sign in»")
+    : "");
+  el("auth-lang-ru")?.classList.toggle("on", lang === "ru");
+  el("auth-lang-en")?.classList.toggle("on", lang === "en");
+}
+
+async function doAuth() {
+  const email = document.getElementById("auth-email")?.value?.trim() || "";
+  const pass  = document.getElementById("auth-pass")?.value || "";
+  const pass2 = document.getElementById("auth-pass2")?.value || "";
+  const errEl = document.getElementById("auth-err");
+  const btn   = document.getElementById("auth-btn");
+  const ru    = lang === "ru";
+
+  if (!email || !pass) { errEl.textContent = ru ? "Введи email и пароль" : "Enter email and password"; return; }
+  if (authMode === "register") {
+    if (pass.length < 6) { errEl.textContent = ru ? "Пароль минимум 6 символов" : "Password must be at least 6 characters"; return; }
+    if (pass !== pass2)  { errEl.textContent = ru ? "Пароли не совпадают" : "Passwords do not match"; return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⟳";
+  errEl.textContent = "";
+
+  try {
+    const { error } = authMode === "login"
+      ? await sb.auth.signInWithPassword({ email, password: pass })
+      : await sb.auth.signUp({ email, password: pass });
+
+    if (error) errEl.textContent = translateAuthError(error.message, ru);
+    // Success handled by onAuthStateChange
+  } catch { errEl.textContent = ru ? "Ошибка соединения" : "Connection error"; }
+
+  btn.disabled = false;
+  updateAuthUI();
+}
+
+function translateAuthError(msg, ru) {
+  if (msg.includes("Invalid login credentials"))  return ru ? "Неверный email или пароль"       : "Invalid email or password";
+  if (msg.includes("Email not confirmed"))        return ru ? "Подтверди email (проверь почту)"  : "Check your email for confirmation";
+  if (msg.includes("User already registered"))   return ru ? "Этот email уже зарегистрирован"   : "Email already registered";
+  if (msg.includes("Password should be"))        return ru ? "Пароль слишком короткий"           : "Password is too short";
+  if (msg.includes("Unable to validate"))        return ru ? "Неверные данные"                  : "Invalid credentials";
+  return (ru ? "Ошибка: " : "Error: ") + msg;
+}
+
+function doSignOut() {
+  showConfirm(
+    lang === "ru"
+      ? "Выйти из аккаунта? Несохранённые данные могут быть потеряны."
+      : "Sign out? Unsynced data may be lost.",
+    async () => {
+      try {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith("tracker_") && k !== "tracker_rate_v1" && k !== "tracker_pwa_hint_v1")
+          .forEach(k => localStorage.removeItem(k));
+      } catch {}
+      exps = {}; incs = {}; cats = []; currentUser = null;
+      await sb.auth.signOut();
+    }, "🚪"
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  DB layer — Supabase CRUD + offline queue
+ * ═══════════════════════════════════════════════════════════════════════ */
+function addPendingOp(op) {
+  const ops = LS.get(PENDING_KEY) || [];
+  ops.push({ ...op, _id: "op_" + Date.now() + Math.random().toString(36).slice(2,5) });
+  LS.set(PENDING_KEY, ops);
+  updateSyncBar();
+}
+
+async function syncPending() {
+  if (!isOnline || !currentUser) return;
+  const ops = LS.get(PENDING_KEY) || [];
+  if (!ops.length) return;
+  isSyncing = true; updateSyncBar();
+  const failed = [];
+  for (const op of ops) {
+    try {
+      if      (op.type === "upsert_expense")   await sb.from("expenses").upsert(op.data, { onConflict: "id" });
+      else if (op.type === "delete_expense")   await sb.from("expenses").delete().eq("id", op.data.id).eq("user_id", currentUser.id);
+      else if (op.type === "upsert_income")    await sb.from("income").upsert(op.data, { onConflict: "id" });
+      else if (op.type === "delete_income")    await sb.from("income").delete().eq("id", op.data.id).eq("user_id", currentUser.id);
+      else if (op.type === "update_user_data") await sb.from("user_data").upsert(op.data, { onConflict: "user_id" });
+      else if (op.type === "reassign_cat")     await sb.from("expenses").update({ cat_id: op.data.to }).eq("user_id", currentUser.id).eq("cat_id", op.data.from);
+    } catch { failed.push(op); }
+  }
+  LS.set(PENDING_KEY, failed);
+  isSyncing = false; updateSyncBar();
+}
+
+function updateSyncBar() {
+  const el = document.getElementById("sync-bar");
+  if (!el) return;
+  const pending = (LS.get(PENDING_KEY) || []).length;
+  const ru = lang === "ru";
+  if (!isOnline) {
+    el.textContent = ru ? "📵 Офлайн — данные сохраняются локально" : "📵 Offline — data saved locally";
+    el.className = "sync-bar offline";
+  } else if (isSyncing) {
+    el.textContent = ru ? "⟳ Синхронизация..." : "⟳ Syncing...";
+    el.className = "sync-bar syncing";
+  } else if (pending > 0) {
+    el.textContent = ru ? `⚠ ${pending} записей ожидают синхронизации` : `⚠ ${pending} items pending sync`;
+    el.className = "sync-bar pending";
+  } else {
+    el.textContent = "";
+    el.className = "sync-bar";
+  }
+}
+
+async function dbUpsertExpense(exp, monthId) {
+  if (!currentUser) return;
+  const row = { id: exp.id, user_id: currentUser.id, month_id: monthId,
+    cat_id: exp.catId, amount: exp.amount, usd: exp.usd ?? null, note: exp.note || "", date: exp.date };
+  if (isOnline) {
+    const { error } = await sb.from("expenses").upsert(row, { onConflict: "id" });
+    if (error) addPendingOp({ type: "upsert_expense", data: row });
+  } else { addPendingOp({ type: "upsert_expense", data: row }); }
+}
+
+async function dbDeleteExpense(id) {
+  if (!currentUser) return;
+  if (isOnline) {
+    const { error } = await sb.from("expenses").delete().eq("id", id).eq("user_id", currentUser.id);
+    if (error) addPendingOp({ type: "delete_expense", data: { id } });
+  } else { addPendingOp({ type: "delete_expense", data: { id } }); }
+}
+
+async function dbUpsertIncome(inc, monthId) {
+  if (!currentUser) return;
+  const row = { id: inc.id, user_id: currentUser.id, month_id: monthId,
+    amount: inc.amount, usd: inc.usd ?? null, note: inc.note || "", date: inc.date, rate: inc.rate };
+  if (isOnline) {
+    const { error } = await sb.from("income").upsert(row, { onConflict: "id" });
+    if (error) addPendingOp({ type: "upsert_income", data: row });
+  } else { addPendingOp({ type: "upsert_income", data: row }); }
+}
+
+async function dbDeleteIncome(id) {
+  if (!currentUser) return;
+  if (isOnline) {
+    const { error } = await sb.from("income").delete().eq("id", id).eq("user_id", currentUser.id);
+    if (error) addPendingOp({ type: "delete_income", data: { id } });
+  } else { addPendingOp({ type: "delete_income", data: { id } }); }
+}
+
+async function saveUserData() {
+  if (!currentUser) return;
+  const row = { user_id: currentUser.id, categories: cats, settings: { lang, theme }, updated_at: new Date().toISOString() };
+  if (isOnline) {
+    const { error } = await sb.from("user_data").upsert(row, { onConflict: "user_id" });
+    if (error) addPendingOp({ type: "update_user_data", data: row });
+  } else { addPendingOp({ type: "update_user_data", data: row }); }
+}
+
+async function loadMonthFromSupabase(monthId) {
+  if (!currentUser || !isOnline) return;
+  try {
+    const [{ data: expData }, { data: incData }] = await Promise.all([
+      sb.from("expenses").select("*").eq("user_id", currentUser.id).eq("month_id", monthId),
+      sb.from("income").select("*").eq("user_id", currentUser.id).eq("month_id", monthId),
+    ]);
+    if (expData) {
+      exps[monthId] = expData.map(r => ({ id: r.id, catId: r.cat_id, amount: r.amount, usd: r.usd, note: r.note, date: r.date }));
+      LS.set(ek(monthId), exps[monthId]);
+    }
+    if (incData) {
+      incs[monthId] = incData.map(r => ({ id: r.id, amount: r.amount, usd: r.usd, note: r.note, date: r.date, rate: r.rate }));
+      LS.set(ik(monthId), incs[monthId]);
+    }
+  } catch {}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Boot
+ * ═══════════════════════════════════════════════════════════════════════ */
+const FK = "tracker_init_v1";
+
+// Detect system language on first visit (no saved preference yet)
+function detectLang() {
+  const sys = (navigator.language || "").toLowerCase();
+  return sys.startsWith("ru") ? "ru" : "en";
+}
+
+// Called immediately — applies theme/lang before auth resolves
+function initPreAuth() {
+  lang  = LS.get(LK) || detectLang();
+  document.documentElement.lang = lang;
+  theme = LS.get(TK) || "dark";
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeColor(theme);
+  const cached = LS.get(RK);
+  if (cached?.rate) { rate = cached.rate; rateTs = cached.ts; }
+  const now = new Date();
+  curYear  = now.getFullYear();
+  curMonth = now.getMonth() + 1;
+  currentNotePh = pickNotePh();
+  updateAuthUI();
+}
+
+// Called after auth confirmed — loads user data, boots app
+async function initUserData() {
+  // Process any pending ops from offline session
+  await syncPending();
+
+  // Load user_data from Supabase
+  if (isOnline) {
+    try {
+      const { data: ud } = await sb.from("user_data").select("*").eq("user_id", currentUser.id).single();
+      if (ud) {
+        // Existing user
+        cats = Array.isArray(ud.categories) && ud.categories.length ? ud.categories : DEFAULT_CATS.map(c=>({...c}));
+        const s = ud.settings || {};
+        if (s.lang)  { lang  = s.lang;  LS.set(LK, lang);  document.documentElement.lang = lang; }
+        if (s.theme) { theme = s.theme; LS.set(TK, theme); document.documentElement.setAttribute("data-theme", theme); updateThemeColor(theme); }
+      } else {
+        // First login — init defaults + migrate any local data
+        cats = DEFAULT_CATS.map(c=>({...c}));
+        await migrateLocalData();
+        await saveUserData();
+      }
+    } catch { _loadCatsFromLS(); }
+  } else { _loadCatsFromLS(); }
+
+  if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
+  LS.set(CK, cats);
+  ensureMonth();
+  render();
+  initSwipes();
+  fetchRateIfNeeded();
+  applyLogoAnim();
+  applyLogoFont();
+  checkPwaHint();
+  updateSyncBar();
+}
+
+function _loadCatsFromLS() {
+  cats = LS.get(CK);
+  if (!cats || !Array.isArray(cats) || !cats.length) {
+    cats = DEFAULT_CATS.map(c=>({...c}));
+    LS.set(CK, cats);
+  }
+}
+
+// Upload existing localStorage data to Supabase on first login
+async function migrateLocalData() {
+  if (!currentUser || !isOnline) return;
+  try {
+    const expRows = [], incRows = [];
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("tracker_exp_")) {
+        const monthId = key.replace("tracker_exp_", "");
+        const data = LS.get(key);
+        if (!Array.isArray(data) || !data.length) continue;
+        data.forEach(e => expRows.push({ id: e.id, user_id: currentUser.id, month_id: monthId,
+          cat_id: e.catId, amount: e.amount, usd: e.usd ?? null, note: e.note || "", date: e.date }));
+        exps[monthId] = data;
+      }
+      if (key.startsWith("tracker_inc_")) {
+        const monthId = key.replace("tracker_inc_", "");
+        const data = LS.get(key);
+        if (!Array.isArray(data) || !data.length) continue;
+        data.forEach(i => incRows.push({ id: i.id, user_id: currentUser.id, month_id: monthId,
+          amount: i.amount, usd: i.usd ?? null, note: i.note || "", date: i.date, rate: i.rate || 12900 }));
+        incs[monthId] = data;
+      }
+    }
+    if (expRows.length) await sb.from("expenses").upsert(expRows, { onConflict: "id" });
+    if (incRows.length) await sb.from("income").upsert(incRows, { onConflict: "id" });
+    const localCats = LS.get(CK);
+    if (localCats?.length) cats = localCats;
+  } catch {}
+}
+
+async function fetchRateIfNeeded() {
+  if (rateTs && (Date.now()-rateTs) < 7*864e5) return;
+  rateBusy = true; render();
+  for (const fn of [
+    () => fetch("https://open.er-api.com/v6/latest/USD").then(r=>r.json()).then(d=>d.rates?.UZS?Math.round(d.rates.UZS):null),
+    () => fetch("https://api.exchangerate-api.com/v4/latest/USD").then(r=>r.json()).then(d=>d.rates?.UZS?Math.round(d.rates.UZS):null),
+  ]) {
+    try {
+      const n = await fn();
+      if (n > 10000 && n < 20000) {
+        rate = n; rateTs = Date.now();
+        LS.set(RK, {rate, ts:rateTs});
+        break;
+      }
+    } catch {}
+  }
+  rateBusy = false; render();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Summary text
+ * ═══════════════════════════════════════════════════════════════════════ */
+function makeSummary(m, s) {
+  const { expTotal, incTotal, bc, incList, expList, balance } = s;
+  const unit = t("sumUnit");
+  if (!expTotal && !incTotal) return t("sumNoData");
+
+  let out = `📊 ${monthLabel(m).toUpperCase()}\n\n`;
+
+  // Income section
+  out += `${t("sumIncome")}\n`;
+  if (incList.length === 0) {
+    out += `   ${t("sumNoIncome")}\n`;
+  } else {
+    incList.forEach((inc, i) => {
+      const usdPart = inc.usd != null ? `$${inc.usd}` : `~$${Math.round(inc.amount / (inc.rate || rate))}`;
+      const ratePart = inc.rate ? ` · 1$=${fmt(inc.rate)}` : "";
+      const notePart = inc.note ? ` · ${inc.note}` : "";
+      out += `${i+1}. ${fmt(inc.amount)} ${unit} (${usdPart})${ratePart}${notePart}\n`;
+    });
+    out += `   ${"─".repeat(28)}\n   ${fmt(incTotal)} ${unit} (~$${incTotalUsd(incList)})\n`;
+  }
+  out += `\n`;
+
+  // Expense section
+  out += `${t("sumExpense")} ${fmt(expTotal)} ${unit} (~$${expTotalUsd(expList)})\n\n`;
+
+  // Balance
+  const balPrefix = balance >= 0 ? "+" : "";
+  const balUsd = balanceUsd(incList, expList);
+  const balUsdStr = balUsd >= 0 ? `+$${balUsd}` : `-$${Math.abs(balUsd)}`;
+  out += `${t("sumBalance")} ${balPrefix}${fmt(balance)} ${unit} (${balUsdStr})\n\n`;
+
+  // Breakdown
+  if (expTotal > 0) {
+    out += `${t("sumWhere")}\n${"─".repeat(30)}\n`;
+    const sorted = cats.filter(c => bc[c.id] > 0).sort((a,b) => bc[b.id]-bc[a.id]);
+    sorted.forEach((c, i) => {
+      const a = bc[c.id], p = Math.round(a/expTotal*100);
+      out += `${i+1}. ${c.e} ${catName(c)}\n   ${fmt(a)} ${unit} (${p}%)\n`;
+    });
+    out += `${"─".repeat(30)}\n${t("sumTotal")} ${sorted.length}`;
+  }
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Render
+ * ═══════════════════════════════════════════════════════════════════════ */
+function render() {
+  ensureMonth();
+  const m = curM();
+  const s = stats(m.id);
+  document.getElementById("app").innerHTML = `
+${showMonthPicker ? `<div class="mpick-back" onclick="togglePicker()"></div>` : ""}
+<div class="mnav">
+  <button class="mbtn" onclick="nav(-1)">←</button>
+  <span class="ml pick-trigger${showMonthPicker?' open':''}" onclick="togglePicker()">${monthLabel(m)}</span>
+  <button class="mbtn" onclick="nav(1)">→</button>
+</div>
+${showMonthPicker ? rMonthPicker() : ""}
+<div class="card">
+  <div class="row">
+    <div style="flex:1;min-width:0">
+      <div class="lbl">${t("expense")}</div>
+      <div class="big">${fmt(s.expTotal)} <span class="dim">${t("sumUnit")}</span></div>
+      <div class="sub">~$${expTotalUsd(s.expList)} · ${s.expList.length} ${recWord(s.expList.length)}</div>
+    </div>
+    <div style="text-align:right;flex:1;min-width:0">
+      <div class="lbl">${t("income")}</div>
+      <div class="big" style="color:var(--success)">${fmt(s.incTotal)} <span class="dim">${t("sumUnit")}</span></div>
+      <div class="sub">~$${incTotalUsd(s.incList)} · ${s.incList.length} ${recWord(s.incList.length)}</div>
+    </div>
+  </div>
+  ${(s.incTotal > 0 || s.expTotal > 0) ? `
+    <div class="balance-bar">
+      <span class="lbl">${t("balance")}</span>
+      <div style="text-align:right">
+        <span class="balance-val ${s.balance >= 0 ? "pos" : "neg"}">${s.balance >= 0 ? "+" : ""}${fmt(s.balance)} ${t("sumUnit")}</span>
+      </div>
+    </div>
+  ` : ""}
+</div>
+<div class="tabs">
+  <button class="tab ${view==="dash"?"on":""}" onclick="sv('dash')">${t("tabDash")}</button>
+  <button class="tab ${view==="add"?"on":""}" onclick="sv('add')">${t("tabAdd")}</button>
+  <button class="tab ${view==="log"?"on":""}" onclick="sv('log')">${t("tabLog")}</button>
+  <button class="tab ${view==="sum"?"on":""}" onclick="sv('sum')">${t("tabSum")}</button>
+  <button class="tab ${view==="set"?"on":""}" onclick="sv('set')">${t("tabSet")}</button>
+</div>
+${view==="dash" ? rdash(s) : ""}
+${view==="add"  ? radd(m)  : ""}
+${view==="log"  ? rlog(s, m.id) : ""}
+${view==="sum"  ? rsum(m, s) : ""}
+${view==="set"  ? rset()   : ""}
+`;
+  const subEl = document.getElementById("subtitle-el");
+  if (subEl) subEl.textContent = t("subtitle");
+}
+
+function fmtShort(n) {
+  if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "М";
+  if (n >= 1000)    return Math.round(n/1000) + "К";
+  return String(Math.round(n));
+}
+
+function rDonut(sorted, bc, expTotal) {
+  if (!sorted.length || !expTotal) return "";
+  const r = 66, cx = 100, cy = 100, sw = 26;
+  const circ = 2 * Math.PI * r;
+  const GAP = 2.5; // gap between segments in SVG units
+  const visible = sorted.filter(c => bc[c.id] / expTotal > 0.01);
+
+  let offset = 0;
+  const segs = visible.map(cat => {
+    const frac = bc[cat.id] / expTotal;
+    const len = Math.max(frac * circ - GAP, 0);
+    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${cat.c}"
+      stroke-width="${sw}" stroke-linecap="round"
+      stroke-dasharray="${len.toFixed(2)} ${circ.toFixed(2)}"
+      stroke-dashoffset="${(-offset).toFixed(2)}"
+      transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset += frac * circ;
+    return seg;
+  });
+
+  const label = fmtShort(expTotal);
+  const unit = t("sumUnit");
+  return `<div class="donut-wrap"><svg viewBox="0 0 200 200" class="donut-svg" aria-hidden="true">
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--card-bg2)" stroke-width="${sw}"/>
+  ${segs.join("")}
+  <text x="${cx}" y="${cy + 7}" text-anchor="middle" class="donut-total">${label}</text>
+  <text x="${cx}" y="${cy + 23}" text-anchor="middle" class="donut-unit">${unit}</text>
+</svg></div>`;
+}
+
+function rdash(s) {
+  const { bc, expTotal } = s;
+  const sorted = cats.filter(c => bc[c.id] > 0).sort((a,b) => bc[b.id]-bc[a.id]);
+  if (!sorted.length && s.incList.length === 0) return `<div class="emp">${t("dashEmpty")}</div>`;
+  if (!sorted.length) return `<div class="emp" style="padding:2rem 1rem">— ${t("sumExpense").replace(":","")} —</div>`;
+  const mx = bc[sorted[0].id];
+  return rDonut(sorted, bc, expTotal) + sorted.map(cat => {
+    const sp = bc[cat.id], p = expTotal>0 ? Math.round(sp/expTotal*100) : 0;
+    return `<div class="cr">
+<div class="ct">
+  <span class="cn">${cat.e} ${escHTML(catName(cat))}</span>
+  <div style="text-align:right"><div class="ca">${fmt(sp)}</div><div class="cp">${p}%</div></div>
+</div>
+<div class="bar"><div class="bf" style="width:${Math.round(sp/mx*100)}%;background:${cat.c}"></div></div>
+</div>`;
+  }).join("");
+}
+
+function radd(m) {
+  // Edit mode: expense
+  if (editingExpId) {
+    const exp = (exps[editingExpMonth] || []).find(e => e.id === editingExpId);
+    if (!exp) { editingExpId = null; editingExpMonth = null; return radd(m); }
+    return rEditExpForm(exp);
+  }
+  // Edit mode: prefill with the income being edited
+  if (editingIncomeId) {
+    const inc = (incs[editingIncomeMonth] || []).find(i => i.id === editingIncomeId);
+    if (!inc) {
+      editingIncomeId = null; editingIncomeMonth = null;
+      return radd(m);
+    }
+    return rEditIncomeForm(inc);
+  }
+
+  const isInc = addType === "inc";
+  const catOpts = cats.map(c => `<option value="${c.id}">${c.e} ${escHTML(catName(c))}</option>`).join("");
+
+  return `
+<p class="ctx">${t("addingTo")} ${monthLabel(m)}</p>
+
+<div class="fg">
+  <label class="fl">${t("formType")}</label>
+  <div class="cur-row">
+    <button type="button" class="cb ${addType==="exp"?"exp-on":""}" onclick="setAddType('exp')">${t("typeExp")}</button>
+    <button type="button" class="cb ${addType==="inc"?"inc-on":""}" onclick="setAddType('inc')">${t("typeInc")}</button>
+  </div>
+</div>
+
+${!isInc ? `
+<div class="fg"><label class="fl">${t("formCat")}</label><select id="fc">${catOpts}</select></div>
+` : ""}
+
+<div class="fg">
+  <label class="fl">${t("formCur")}</label>
+  <div class="cur-row">
+    <button type="button" class="cb ${curSel==="uzs"?"on":""}" id="buz" onclick="setCur('uzs')">🇺🇿 UZS</button>
+    <button type="button" class="cb ${curSel==="usd"?"on":""}" id="bud" onclick="setCur('usd')">🇺🇸 USD</button>
+  </div>
+</div>
+
+<div class="fg">
+  <label class="fl">${t("formAmt")}</label>
+  <input type="number" id="fa" placeholder="${curSel==="usd"?t("phUsd"):t("phUzs")}" oninput="uprev()"/>
+  <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}">${t("enterUsd")}</div>
+  ${isInc ? `<div class="rate-hint">${t("rateCurrent")} <strong>1$ = ${fmt(rate)} ${t("sumUnit")}</strong> · ${t("rateWillLock")}</div>` : ""}
+</div>
+
+<div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${tod()}"/></div>
+
+<div class="fg">
+  <label class="fl">${t("formNote")}</label>
+  <input type="text" id="fn" placeholder="${escHTML(currentNotePh)}" onkeydown="if(event.key==='Enter')doAdd()"/>
+</div>
+
+<button class="abtn ${isInc?"inc":""}" onclick="doAdd()">${isInc ? t("addIncBtn") : t("addExpBtn")}</button>
+`;
+}
+
+function rEditIncomeForm(inc) {
+  const inUsd = inc.usd != null;
+  const amountToShow = inUsd ? inc.usd : inc.amount;
+  return `
+<div class="edit-box">
+  <div class="edit-h">${t("editingIncome")}</div>
+  <div class="rate-locked">${t("rateLocked")} 1$ = ${fmt(inc.rate)} ${t("sumUnit")}</div>
+
+  <div class="fg" style="margin-top:14px">
+    <label class="fl">${t("formCur")}</label>
+    <div class="cur-row">
+      <button type="button" class="cb ${curSel==="uzs"?"on":""}" id="buz" onclick="setCur('uzs')">🇺🇿 UZS</button>
+      <button type="button" class="cb ${curSel==="usd"?"on":""}" id="bud" onclick="setCur('usd')">🇺🇸 USD</button>
+    </div>
+  </div>
+
+  <div class="fg">
+    <label class="fl">${t("formAmt")}</label>
+    <input type="number" id="fa" value="${amountToShow}" oninput="uprevEdit(${inc.rate})"/>
+    <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}"></div>
+  </div>
+
+  <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${inc.date}"/></div>
+
+  <div class="fg">
+    <label class="fl">${t("formNote")}</label>
+    <input type="text" id="fn" value="${escHTML(inc.note || "")}"/>
+  </div>
+
+  <div class="btn-row">
+    <button class="abtn sec" onclick="cancelEditIncome()">${t("cancelBtn")}</button>
+    <button class="abtn inc" onclick="doSaveEditIncome()">${t("saveChangesBtn")}</button>
+  </div>
+</div>
+`;
+}
+
+function rEditExpForm(exp) {
+  const inUsd = exp.usd != null;
+  const amountToShow = inUsd ? exp.usd : exp.amount;
+  const catOpts = cats.map(c => `<option value="${c.id}" ${c.id === exp.catId ? "selected" : ""}>${c.e} ${escHTML(catName(c))}</option>`).join("");
+  return `
+<div class="edit-box">
+  <div class="edit-h">${t("editingExpense")}</div>
+
+  <div class="fg">
+    <label class="fl">${t("formCat")}</label>
+    <select id="fc">${catOpts}</select>
+  </div>
+
+  <div class="fg">
+    <label class="fl">${t("formCur")}</label>
+    <div class="cur-row">
+      <button type="button" class="cb ${curSel==="uzs"?"on":""}" onclick="setCur('uzs')">🇺🇿 UZS</button>
+      <button type="button" class="cb ${curSel==="usd"?"on":""}" onclick="setCur('usd')">🇺🇸 USD</button>
+    </div>
+  </div>
+
+  <div class="fg">
+    <label class="fl">${t("formAmt")}</label>
+    <input type="number" id="fa" value="${amountToShow}" oninput="uprev()"/>
+    <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}"></div>
+  </div>
+
+  <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${exp.date}"/></div>
+
+  <div class="fg">
+    <label class="fl">${t("formNote")}</label>
+    <input type="text" id="fn" value="${escHTML(exp.note || "")}"/>
+  </div>
+
+  <div class="btn-row">
+    <button class="abtn sec" onclick="cancelEditExp()">${t("cancelBtn")}</button>
+    <button class="abtn" onclick="doSaveEditExp()">${t("saveChangesBtn")}</button>
+  </div>
+</div>
+`;
+}
+
+function startEditExp(mid, id) {
+  const exp = (exps[mid] || []).find(e => e.id === id);
+  if (!exp) return;
+  editingExpId = id;
+  editingExpMonth = mid;
+  curSel = exp.usd != null ? "usd" : "uzs";
+  view = "add";
+  render();
+}
+
+function cancelEditExp() {
+  editingExpId = null;
+  editingExpMonth = null;
+  view = "log";
+  render();
+}
+
+function doSaveEditExp() {
+  const exp = (exps[editingExpMonth] || []).find(e => e.id === editingExpId);
+  if (!exp) { cancelEditExp(); return; }
+
+  const raw = (document.getElementById("fa")?.value || "").trim();
+  const inp = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  const note = (document.getElementById("fn")?.value || "").trim();
+  const date = document.getElementById("fd")?.value || exp.date;
+  const catId = document.getElementById("fc")?.value || exp.catId;
+
+  if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
+
+  if (curSel === "usd") {
+    exp.usd = inp;
+    exp.amount = Math.round(inp * rate);
+  } else {
+    exp.amount = Math.round(inp);
+    exp.usd = null;
+  }
+  exp.note = note;
+  exp.date = date;
+  exp.catId = catId;
+
+  LS.set(ek(editingExpMonth), exps[editingExpMonth]);
+  dbUpsertExpense(exp, editingExpMonth);
+  showToast(t("tSaved"));
+  editingExpId = null;
+  editingExpMonth = null;
+  view = "log";
+  render();
+}
+
+function rlog(s, mid) {
+  const all = [
+    ...s.incList.map(e => ({...e, _type:"inc"})),
+    ...s.expList.map(e => ({...e, _type:"exp"})),
+  ];
+  if (!all.length) return `<div class="emp">${t("logEmpty")}</div>`;
+  all.sort((a,b) => {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return a.id < b.id ? 1 : -1;
+  });
+  return all.map(e => {
+    const tx = swipedItemId === e.id ? -80 : 0;
+    const ts = `transform:translateX(${tx}px)`;
+    if (e._type === "inc") {
+      return `<div class="li income" data-lid="${e.id}">
+  <div class="li-inner" style="${ts}">
+    <div class="av">💰</div>
+    <div style="flex:1;min-width:0">
+      <div class="ln">${t("incLabel")}${e.note?" · "+escHTML(e.note):""}</div>
+      <div class="lm">${e.date} · 🔒 1$=${fmt(e.rate)}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div class="la inc-amt">+${fmt(e.amount)}</div>
+      ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
+      <div class="actions">
+        <button class="ab edit" onclick="startEditIncome('${mid}','${e.id}')">${t("edit")}</button>
+      </div>
+    </div>
+  </div>
+  <button class="li-del-sw" onclick="doDelInc('${mid}','${e.id}')">🗑️<span>${t("delete")}</span></button>
+</div>`;
+    } else {
+      const cat = catById(e.catId);
+      return `<div class="li" data-lid="${e.id}">
+  <div class="li-inner" style="${ts}">
+    <div class="av" style="background:${cat.c}25">${cat.e}</div>
+    <div style="flex:1;min-width:0">
+      <div class="ln">${escHTML(catName(cat))}</div>
+      <div class="lm">${e.date}${e.note?" · "+escHTML(e.note):""}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div class="la">${fmt(e.amount)}</div>
+      ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
+      <div class="actions">
+        <button class="ab edit" onclick="startEditExp('${mid}','${e.id}')">${t("edit")}</button>
+      </div>
+    </div>
+  </div>
+  <button class="li-del-sw" onclick="doDel('${mid}','${e.id}')">🗑️<span>${t("delete")}</span></button>
+</div>`;
+    }
+  }).join("");
+}
+
+function rsum(m, s) {
+  if (!s.expTotal && !s.incTotal) {
+    return `<div class="emp">${t("sumNoData")}</div>`;
+  }
+  return `<div class="sbox">
+<pre class="spre">${escHTML(makeSummary(m, s))}</pre>
+<button class="cpb" onclick="doCopy()">${t("copyBtn")}</button>
+</div>`;
+}
+
+function rset() {
+  const email = escHTML(currentUser?.email || "");
+  return `
+<div class="sec">
+  <div class="sec-h">${t("setAccount")}</div>
+  <div class="auth-email-badge">📧 ${email}</div>
+  <button class="abtn exp" onclick="doSignOut()">🚪 ${t("signOut")}</button>
+</div>
+
+<div class="sec">
+  <div class="sec-h">${t("setLang")}</div>
+  <div class="opt-row">
+    <button class="opt-btn ${lang==="ru"?"on":""}" onclick="setLang('ru')">🇷🇺 Русский</button>
+    <button class="opt-btn ${lang==="en"?"on":""}" onclick="setLang('en')">🇬🇧 English</button>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-h">${t("setTheme")}</div>
+  <div class="opt-row">
+    <button class="opt-btn ${theme==="dark"?"on":""}" onclick="setTheme('dark')">${t("themeDark")}</button>
+    <button class="opt-btn ${theme==="dark-og"?"on":""}" onclick="setTheme('dark-og')">${t("themeDarkOg")}</button>
+    <button class="opt-btn ${theme==="light"?"on":""}" onclick="setTheme('light')">${t("themeLight")}</button>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-h">${t("setCats")}</div>
+  ${newCatMode ? rNewCatForm() : ""}
+  ${editingCatId ? rEditCatForm() : ""}
+  ${(!newCatMode && !editingCatId) ? `
+    <div class="cat-list">
+      ${cats.map(c => `
+        <div class="cat-li">
+          <span class="cat-em">${c.e}</span>
+          <span class="cat-nm">${escHTML(catName(c))}</span>
+          <span class="cat-color" style="background:${c.c}"></span>
+          <button class="ic-btn" onclick="startEditCat('${c.id}')">✏️</button>
+          ${c.id !== "other" ? `<button class="ic-btn" onclick="deleteCat('${c.id}')">🗑️</button>` : `<span style="width:34px"></span>`}
+        </div>
+      `).join("")}
+    </div>
+    <button class="abtn sec" style="margin-top:12px" onclick="startNewCat()">${t("setAddCat")}</button>
+  ` : ""}
+</div>
+`;
+}
+
+function rEmojiPicker(inputId) {
+  return `
+<div class="emoji-grid">
+  ${EMOJI_GRID.map(em => `<button type="button" class="emoji-cell ${editEmoji===em?"on":""}" onclick="setEditEmoji('${em}')">${em}</button>`).join("")}
+</div>
+<div class="ctx">${t("emojiHint")}</div>
+<input type="text" id="${inputId}" value="${escHTML(editEmoji)}" maxlength="4" oninput="onEmojiInput(this.value)" placeholder="✨"/>`;
+}
+
+function rColorPicker() {
+  return `<div class="color-grid">
+    ${COLOR_GRID.map(c => `<button type="button" class="color-cell ${editColor===c?"on":""}" style="background:${c}" onclick="setEditColor('${c}')"></button>`).join("")}
+  </div>`;
+}
+
+function rNewCatForm() {
+  return `<div class="edit-box">
+    <div class="edit-h">${t("setNewCat")}</div>
+    <div class="fg"><label class="fl">${t("setEmoji")}</label>${rEmojiPicker("ne_em")}</div>
+    <div class="fg"><label class="fl">${t("setName")}</label><input type="text" id="ne_nm" value="${escHTML(editName)}" oninput="editName=this.value" placeholder="${t("newCatPh")}"/></div>
+    <div class="fg"><label class="fl">${t("setColor")}</label>${rColorPicker()}</div>
+    <div class="btn-row">
+      <button class="abtn sec" onclick="cancelNewCat()">${t("setCancel")}</button>
+      <button class="abtn" onclick="saveNewCat()">${t("setAdd")}</button>
+    </div>
+  </div>`;
+}
+
+function rEditCatForm() {
+  const c = cats.find(x => x.id === editingCatId);
+  if (!c) return "";
+  return `<div class="edit-box">
+    <div class="edit-h">${t("setEditCat")}: ${c.e} ${escHTML(catName(c))}</div>
+    <div class="fg"><label class="fl">${t("setEmoji")}</label>${rEmojiPicker("ed_em")}</div>
+    <div class="fg"><label class="fl">${t("setName")}</label><input type="text" id="ed_nm" value="${escHTML(editName)}" oninput="editName=this.value"/></div>
+    <div class="fg"><label class="fl">${t("setColor")}</label>${rColorPicker()}</div>
+    <div class="btn-row">
+      <button class="abtn sec" onclick="cancelEditCat()">${t("setCancel")}</button>
+      <button class="abtn" onclick="saveEditCat()">${t("setSave")}</button>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Actions
+ * ═══════════════════════════════════════════════════════════════════════ */
+function rMonthPicker() {
+  const maxY = new Date().getFullYear() + 2;
+  const btns = MONTHS_META.map(m => {
+    const on = pickerYear === curYear && m.num === curMonth;
+    return `<button class="mpick-btn${on?' on':''}" onclick="pickMonth(${pickerYear},${m.num})">${m[lang].slice(0,3)}</button>`;
+  }).join("");
+  return `<div class="mpick">
+    <div class="mpick-head">
+      <button class="mbtn" onclick="adjPickYear(-1)" ${pickerYear<=2026?"disabled":""}>←</button>
+      <span class="mpick-yr">${pickerYear}</span>
+      <button class="mbtn" onclick="adjPickYear(1)" ${pickerYear>=maxY?"disabled":""}>→</button>
+    </div>
+    <div class="mpick-grid">${btns}</div>
+  </div>`;
+}
+
+function togglePicker() {
+  showMonthPicker = !showMonthPicker;
+  if (showMonthPicker) pickerYear = curYear;
+  render();
+}
+
+function adjPickYear(d) {
+  pickerYear = Math.max(2026, Math.min(new Date().getFullYear()+2, pickerYear+d));
+  render();
+}
+
+function pickMonth(y, m) {
+  curYear = y; curMonth = m;
+  showMonthPicker = false;
+  ensureMonth();
+  render();
+}
+
+function nav(d) {
+  swipedItemId = null;
+  curMonth += d;
+  if (curMonth < 1)  { curMonth = 12; curYear--; }
+  if (curMonth > 12) { curMonth = 1;  curYear++; }
+  ensureMonth();
+  render();
+}
+
+function sv(v) {
+  view = v;
+  showMonthPicker = false;
+  swipedItemId = null;
+  editingCatId = null; newCatMode = false;
+  editingIncomeId = null; editingIncomeMonth = null;
+  if (v === "add") {
+    currentNotePh = pickNotePh();
+    curSel = "uzs";
+  }
+  setLogoAnimForView(v);
+  render();
+}
+
+// dash→breathe, add→wave, log→neon, sum→rage, set→settings glitch (not in tap rotation)
+const VIEW_ANIM_MAP = { dash:1, add:3, log:2, sum:0 };
+function setLogoAnimForView(v) {
+  const el = document.getElementById("logo");
+  if (!el) return;
+  if (v === "set") {
+    el.setAttribute("data-anim", "settings");
+    return;
+  }
+  if (VIEW_ANIM_MAP[v] === undefined) return;
+  logoAnimIdx = VIEW_ANIM_MAP[v];
+  applyLogoAnim(el);
+}
+
+function setLang(l) {
+  if (l !== "ru" && l !== "en") return;
+  lang = l;
+  LS.set(LK, lang);
+  document.documentElement.lang = lang;
+  if (view === "add") currentNotePh = pickNotePh();
+  saveUserData();
+  render();
+  updateAuthUI();
+}
+
+function setTheme(th) {
+  if (!["dark","dark-og","light"].includes(th)) return;
+  theme = th;
+  LS.set(TK, theme);
+  document.documentElement.setAttribute("data-theme", theme);
+  updateThemeColor(th);
+  saveUserData();
+  showToast(t("tThemeChanged"));
+  render();
+}
+
+const THEME_COLORS = { "dark":"#0e0e1a", "dark-og":"#0d0d10", "light":"#f2ede0" };
+function updateThemeColor(th) {
+  const meta = document.getElementById("meta-theme-color");
+  if (meta) meta.content = THEME_COLORS[th] || THEME_COLORS.dark;
+}
+
+function setAddType(type) {
+  if (type !== "exp" && type !== "inc") return;
+  addType = type;
+  curSel = "uzs";
+  render();
+}
+
+function setCur(c) {
+  curSel = c;
+  document.getElementById("buz")?.classList.toggle("on", c==="uzs");
+  document.getElementById("bud")?.classList.toggle("on", c==="usd");
+  const fa = document.getElementById("fa");
+  if (fa) { fa.value=""; fa.placeholder = c==="usd" ? t("phUsd") : t("phUzs"); }
+  const pv = document.getElementById("pv");
+  if (pv) { pv.style.display = c==="usd"?"block":"none"; pv.textContent = t("enterUsd"); }
+}
+
+function uprev() {
+  const pv = document.getElementById("pv");
+  if (!pv || curSel !== "usd") return;
+  const v = parseFloat(document.getElementById("fa")?.value || "0");
+  pv.textContent = v > 0 ? `≈ ${fmt(v*rate)} ${t("sumUnit")} (1$=${fmt(rate)})` : t("enterUsd");
+}
+
+function uprevEdit(lockedRate) {
+  const pv = document.getElementById("pv");
+  if (!pv) return;
+  const v = parseFloat(document.getElementById("fa")?.value || "0");
+  if (curSel === "usd") {
+    pv.style.display = "block";
+    pv.textContent = v > 0 ? `≈ ${fmt(v*lockedRate)} ${t("sumUnit")} (🔒 1$=${fmt(lockedRate)})` : t("enterUsd");
+  } else {
+    pv.style.display = v > 0 ? "block" : "none";
+    pv.textContent = v > 0 ? `≈ $${(v/lockedRate).toFixed(2)} (🔒 1$=${fmt(lockedRate)})` : "";
+  }
+}
+
+function doAdd() {
+  const raw = (document.getElementById("fa")?.value || "").trim();
+  const inp = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  const note = (document.getElementById("fn")?.value || "").trim();
+  const date = document.getElementById("fd")?.value || tod();
+
+  if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
+
+  const m = curM();
+  const isInc = addType === "inc";
+  const usd = curSel === "usd" ? inp : undefined;
+  const amount = curSel === "usd" ? Math.round(inp*rate) : Math.round(inp);
+  const id = (isInc ? "i" : "e") + Date.now() + Math.random().toString(36).slice(2,6);
+
+  if (isInc) {
+    const entry = { id, amount, rate, note, date };
+    if (usd !== undefined) entry.usd = usd;
+    incs[m.id] = [...(incs[m.id] || []), entry];
+    LS.set(ik(m.id), incs[m.id]);
+    dbUpsertIncome(entry, m.id);
+    showToast(t("tIncSaved"));
+  } else {
+    const catId = document.getElementById("fc")?.value || "other";
+    if (!catById(catId)) { showToast("Invalid category", true); return; }
+    const entry = { id, catId, amount, note, date };
+    if (usd !== undefined) entry.usd = usd;
+    exps[m.id] = [...(exps[m.id] || []), entry];
+    LS.set(ek(m.id), exps[m.id]);
+    dbUpsertExpense(entry, m.id);
+    showToast(t("tSaved"));
+  }
+
+  document.getElementById("fa").value = "";
+  document.getElementById("fn").value = "";
+  currentNotePh = pickNotePh();
+  render();
+}
+
+function doDel(mid, id) {
+  showConfirm(t("deleteConfirm"), () => {
+    swipedItemId = null;
+    exps[mid] = (exps[mid] || []).filter(e => e.id !== id);
+    LS.set(ek(mid), exps[mid]);
+    dbDeleteExpense(id);
+    showToast(t("tDeleted"));
+    render();
+  });
+}
+
+function doDelInc(mid, id) {
+  showConfirm(t("deleteIncConfirm"), () => {
+    swipedItemId = null;
+    incs[mid] = (incs[mid] || []).filter(e => e.id !== id);
+    LS.set(ik(mid), incs[mid]);
+    dbDeleteIncome(id);
+    showToast(t("tIncDeleted"));
+    render();
+  }, "💰");
+}
+
+function startEditIncome(mid, id) {
+  const inc = (incs[mid] || []).find(e => e.id === id);
+  if (!inc) return;
+  editingIncomeId = id;
+  editingIncomeMonth = mid;
+  curSel = inc.usd != null ? "usd" : "uzs";
+  view = "add";
+  render();
+}
+
+function cancelEditIncome() {
+  editingIncomeId = null;
+  editingIncomeMonth = null;
+  view = "log";
+  render();
+}
+
+function doSaveEditIncome() {
+  const inc = (incs[editingIncomeMonth] || []).find(e => e.id === editingIncomeId);
+  if (!inc) { cancelEditIncome(); return; }
+
+  const raw = (document.getElementById("fa")?.value || "").trim();
+  const inp = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  const note = (document.getElementById("fn")?.value || "").trim();
+  const date = document.getElementById("fd")?.value || inc.date;
+
+  if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
+
+  // Recompute amount/usd using locked rate
+  const lockedRate = inc.rate;
+  if (curSel === "usd") {
+    inc.usd = inp;
+    inc.amount = Math.round(inp * lockedRate);
+  } else {
+    inc.amount = Math.round(inp);
+    inc.usd = parseFloat((inp / lockedRate).toFixed(2));
+  }
+  inc.note = note;
+  inc.date = date;
+
+  LS.set(ik(editingIncomeMonth), incs[editingIncomeMonth]);
+  dbUpsertIncome(inc, editingIncomeMonth);
+  showToast(t("tIncUpdated"));
+  editingIncomeId = null;
+  editingIncomeMonth = null;
+  view = "log";
+  render();
+}
+
+async function doCopy() {
+  const m = curM();
+  const s = stats(m.id);
+  const txt = makeSummary(m, s);
+  try { await navigator.clipboard.writeText(txt); }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch {}
+    document.body.removeChild(ta);
+  }
+  showToast(t("tCopied"));
+}
+
+/* ─── Category management ──────────────────────────────────────────── */
+function startEditCat(id) {
+  const c = cats.find(x => x.id === id);
+  if (!c) return;
+  editingCatId = id;
+  newCatMode = false;
+  editEmoji = c.e;
+  editName = catName(c);
+  editColor = c.c;
+  render();
+}
+
+function cancelEditCat() {
+  editingCatId = null;
+  editEmoji = ""; editName = ""; editColor = "";
+  render();
+}
+
+function saveEditCat() {
+  const c = cats.find(x => x.id === editingCatId);
+  if (!c) { cancelEditCat(); return; }
+  const nameInput = (document.getElementById("ed_nm")?.value || editName).trim();
+  if (!nameInput) { showToast(t("tEnterName"), true); return; }
+  if (!editEmoji) { showToast(t("tEnterEmoji"), true); return; }
+
+  c.e = editEmoji;
+  c[`n_${lang}`] = nameInput;
+  const other = lang === "ru" ? "n_en" : "n_ru";
+  if (!c[other]) c[other] = nameInput;
+  if (editColor) c.c = editColor;
+
+  LS.set(CK, cats);
+  saveUserData();
+  showToast(t("tCatUpdated"));
+  cancelEditCat();
+}
+
+function startNewCat() {
+  newCatMode = true;
+  editingCatId = null;
+  editEmoji = "✨";
+  editName = "";
+  editColor = COLOR_GRID[Math.floor(Math.random()*COLOR_GRID.length)];
+  render();
+}
+
+function cancelNewCat() {
+  newCatMode = false;
+  editEmoji = ""; editName = ""; editColor = "";
+  render();
+}
+
+function saveNewCat() {
+  const nameInput = (document.getElementById("ne_nm")?.value || editName).trim();
+  if (!nameInput) { showToast(t("tEnterName"), true); return; }
+  if (!editEmoji) { showToast(t("tEnterEmoji"), true); return; }
+  if (!editColor) { showToast("Pick a color", true); return; }
+
+  const id = "custom_"+Date.now()+Math.random().toString(36).slice(2,6);
+  const newCat = {id, e:editEmoji, n_ru:nameInput, n_en:nameInput, c:editColor};
+  const otherIdx = cats.findIndex(c => c.id === "other");
+  if (otherIdx >= 0) cats.splice(otherIdx, 0, newCat);
+  else cats.push(newCat);
+
+  LS.set(CK, cats);
+  saveUserData();
+  showToast(t("tCatAdded"));
+  cancelNewCat();
+}
+
+function deleteCat(id) {
+  if (id === "other") { showToast(t("delCatProtected"), true); return; }
+
+  // Load all months from localStorage so no data is missed
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("tracker_exp_"))
+      .forEach(k => ensureMonth(k.replace("tracker_exp_","")));
+  } catch {}
+
+  let count = 0;
+  for (const monthId in exps) {
+    count += (exps[monthId] || []).filter(e => e.catId === id).length;
+  }
+
+  let msg = t("delCatNoExp");
+  if (count > 0) {
+    const word = recWord(count);
+    msg = t("delCatWithExp").replace("{n}", count).replace("{w}", word);
+  }
+  showConfirm(msg, async () => {
+    if (count > 0) {
+      for (const monthId in exps) {
+        let changed = false;
+        exps[monthId] = (exps[monthId] || []).map(e => {
+          if (e.catId === id) { changed = true; return {...e, catId:"other"}; }
+          return e;
+        });
+        if (changed) LS.set(ek(monthId), exps[monthId]);
+      }
+      // Bulk update in Supabase
+      if (isOnline && currentUser) {
+        await sb.from("expenses").update({ cat_id: "other" }).eq("user_id", currentUser.id).eq("cat_id", id);
+      } else {
+        addPendingOp({ type: "reassign_cat", data: { from: id, to: "other" } });
+      }
+    }
+    cats = cats.filter(c => c.id !== id);
+    LS.set(CK, cats);
+    saveUserData();
+    showToast(t("tCatDeleted"));
+    render();
+  }, "🗑️");
+}
+
+function setEditEmoji(em) { editEmoji = em; render(); }
+function setEditColor(c)  { editColor = c;  render(); }
+function onEmojiInput(v) {
+  const clean = v.trim();
+  if (clean) { editEmoji = clean; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Logo animation
+ * ═══════════════════════════════════════════════════════════════════════ */
+const LOGO_ANIMS  = ["rage","breathe","neon","wave"];
+// 5 logo fonts — cycles on each tap independently of animation
+// Courier New: techy OG · Bebas Neue: yells at you · Permanent Marker: napkin math
+// Bangers: comic-book crisis · VT323: hacker CRT terminal
+const LOGO_FONTS  = [
+  { family:"'Courier New',monospace",    size:"clamp(26px,7.1vw,34px)"  },
+  { family:"'Bebas Neue',sans-serif",    size:"clamp(33px,9.2vw,44px)"  },
+  { family:"'Permanent Marker',cursive", size:"clamp(22px,5.8vw,28px)"  },
+  { family:"'Bangers',cursive",          size:"clamp(32px,8.75vw,42px)" },
+  { family:"'VT323',monospace",          size:"clamp(33px,9.2vw,44px)"  },
+];
+let logoAnimIdx  = 1; // breathe on load — matches Overview tab default
+let logoFontIdx  = 0; // start with Courier New
+let logoGlitching = false;
+let logoTapCount = 0;
+
+function applyLogoAnim(el) {
+  el = el || document.getElementById("logo");
+  if (!el) return;
+  el.setAttribute("data-anim", LOGO_ANIMS[logoAnimIdx]);
+}
+
+function applyLogoFont(el) {
+  el = el || document.getElementById("logo");
+  if (!el) return;
+  const f = LOGO_FONTS[logoFontIdx];
+  el.style.fontFamily = f.family;
+  el.style.fontSize   = f.size;
+}
+
+function onLogoTap() {
+  const el = document.getElementById("logo");
+  if (!el || logoGlitching) return;
+  logoGlitching = true;
+  logoTapCount++;
+  const triggerEgg = logoTapCount > 0 && logoTapCount % 5 === 0;
+
+  el.removeAttribute("data-anim");
+  el.classList.add("glitching");
+  setTimeout(() => {
+    el.classList.remove("glitching");
+    logoAnimIdx = (logoAnimIdx + 1) % LOGO_ANIMS.length;
+    logoFontIdx = (logoFontIdx + 1) % LOGO_FONTS.length;
+    applyLogoAnim(el);
+    applyLogoFont(el);
+    logoGlitching = false;
+    if (triggerEgg) showEasterEgg();
+  }, 620);
+}
+
+function spawnParticles() {
+  const container = document.getElementById("ee-particles");
+  if (!container) return;
+  container.innerHTML = "";
+  const pool = ["💸","💸","💸","💸","🔥","💸","💸","🔥","💵","💸"];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement("span");
+    el.className = "ee-p";
+    el.textContent = pool[Math.floor(Math.random() * pool.length)];
+    const size  = Math.random() * 18 + 14;          // 14–32px
+    const left  = Math.random() * 100;               // 0–100%
+    const delay = Math.random() * 5;                 // 0–5s stagger
+    const dur   = Math.random() * 3 + 4;             // 4–7s fall
+    const opa   = (Math.random() * 0.35 + 0.2).toFixed(2); // 0.2–0.55
+    el.style.cssText = `left:${left}%;font-size:${size}px;opacity:0;` +
+      `animation:p-fall ${dur}s ${delay}s linear infinite`;
+    container.appendChild(el);
+  }
+}
+
+function showEasterEgg() {
+  const el = document.getElementById("easter-egg");
+  if (!el) return;
+  const badgeEl = document.getElementById("ee-badge");
+  const nameEl  = document.getElementById("ee-name");
+  const roleEl  = document.getElementById("ee-role");
+  const bioEl   = document.getElementById("ee-bio");
+  const footer  = document.getElementById("ee-footer");
+  if (badgeEl) badgeEl.textContent = t("eeBadge");
+  if (nameEl)  nameEl.textContent  = t("eeName");
+  if (roleEl)  roleEl.textContent  = t("eeRole");
+  if (bioEl)   bioEl.innerHTML     = t("eeBio");
+  if (footer) {
+    const n = logoTapCount;
+    const s = lang === "en" ? (n === 1 ? "" : "s") : "";
+    footer.textContent = t("eeFooter").replace("{n}", n).replace("{s}", s);
+  }
+  spawnParticles();
+  el.style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function closeEasterEgg() {
+  const el = document.getElementById("easter-egg");
+  if (!el) return;
+  el.style.display = "none";
+  document.body.style.overflow = "";
+  const container = document.getElementById("ee-particles");
+  if (container) container.innerHTML = "";
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Swipe gestures
+ *  — Swipe on mnav bar       → prev / next month
+ *  — Swipe on content below  → prev / next tab
+ * ═══════════════════════════════════════════════════════════════════════ */
+const SWIPE_TAB_ORDER = ["dash","add","log","sum","set"];
+const SWIPE_MIN_X  = 62;  // min horizontal distance (px)
+const SWIPE_RATIO  = 1.8; // horizontal must dominate vertical by this ratio
+
+function initSwipes() {
+  const app = document.getElementById("app");
+  if (!app || app._swipeInit) return;
+  app._swipeInit = true;
+
+  let sx = 0, sy = 0, onMnav = false, liId = null;
+
+  app.addEventListener("touchstart", e => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    onMnav = !!e.target.closest(".mnav");
+    const li = e.target.closest(".li[data-lid]");
+    liId = li ? li.dataset.lid : null;
+  }, {passive: true});
+
+  app.addEventListener("touchend", e => {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+
+    // ── Swipe-to-delete: touch started on a log item ──────────
+    if (liId !== null) {
+      if (Math.abs(dx) >= 28 && Math.abs(dx) >= Math.abs(dy)) {
+        if (dx < 0) {
+          // Swipe left → reveal delete button
+          swipedItemId = liId;
+          render();
+        } else if (swipedItemId === liId) {
+          // Swipe right on same item → close it
+          swipedItemId = null;
+          render();
+        }
+      } else if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && swipedItemId && swipedItemId !== liId) {
+        // Tap on a different item → close current
+        swipedItemId = null;
+        render();
+      }
+      return; // log item swipe always takes priority
+    }
+
+    // ── Tap outside any log item → close open swipe ───────────
+    if (swipedItemId && Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+      swipedItemId = null;
+      render();
+      return;
+    }
+
+    // ── Global guards ─────────────────────────────────────────
+    if (showMonthPicker || editingIncomeId || editingExpId || editingCatId || newCatMode) return;
+    const active = document.activeElement;
+    if (active && (active.tagName === "INPUT" || active.tagName === "SELECT" || active.tagName === "TEXTAREA")) return;
+    if (Math.abs(dx) < SWIPE_MIN_X || Math.abs(dx) < Math.abs(dy) * SWIPE_RATIO) return;
+
+    const dir = dx < 0 ? 1 : -1; // 1 = left swipe, -1 = right swipe
+
+    if (onMnav) {
+      nav(dir);              // month navigation
+    } else {
+      const i  = SWIPE_TAB_ORDER.indexOf(view);
+      const ni = Math.max(0, Math.min(SWIPE_TAB_ORDER.length - 1, i + dir));
+      if (ni !== i) sv(SWIPE_TAB_ORDER[ni]); // tab navigation
+    }
+  }, {passive: true});
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  PWA install hint
+ * ═══════════════════════════════════════════════════════════════════════ */
+const PWA_SK = "tracker_pwa_hint_v1";
+let deferredInstallPrompt = null;
+
+// Capture Android Chrome native install prompt
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+// Auto-dismiss if user installs via browser UI
+window.addEventListener("appinstalled", () => dismissPwaHint(true));
+
+function detectPlatform() {
+  // Already running as PWA?
+  if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) return "pwa";
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  if (!isIOS && !isAndroid) return "desktop";
+  if (isIOS) {
+    // Native Safari: has Safari UA, no 3rd-party browser tokens
+    return /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua) ? "ios-other" : "ios";
+  }
+  if (/SamsungBrowser/.test(ua)) return "android-samsung";
+  if (/Chrome/.test(ua) && !/EdgA/.test(ua)) return "android-chrome";
+  return "android-other";
+}
+
+function pwaHintState() {
+  return LS.get(PWA_SK) || { sessions:0, count:0, lastSeen:0, done:false };
+}
+
+function checkPwaHint() {
+  const platform = detectPlatform();
+  if (platform === "pwa" || platform === "desktop") return;
+
+  const s = pwaHintState();
+  s.sessions++;
+
+  // Conditions to NOT show
+  if (s.done || s.count >= 3 || s.sessions < 4) { LS.set(PWA_SK, s); return; }
+  if (s.lastSeen > 0 && (Date.now() - s.lastSeen) < 7 * 864e5) { LS.set(PWA_SK, s); return; }
+
+  // Show only if user has real data
+  const hasData = Object.keys(localStorage).some(k => {
+    if (!k.startsWith("tracker_exp_") && !k.startsWith("tracker_inc_")) return false;
+    try { const v = JSON.parse(localStorage.getItem(k)); return Array.isArray(v) && v.length > 0; }
+    catch { return false; }
+  });
+  if (!hasData) { LS.set(PWA_SK, s); return; }
+
+  s.count++;
+  s.lastSeen = Date.now();
+  LS.set(PWA_SK, s);
+
+  setTimeout(() => showPwaHint(platform), 2200);
+}
+
+function showPwaHint(platform) {
+  const el = document.getElementById("pwa-hint");
+  if (!el) return;
+  const ru = lang === "ru";
+
+  const copy = {
+    ios: {
+      icon: "📲",
+      title: ru ? "Добавить на экран домой" : "Add to Home Screen",
+      body:  ru
+        ? "Нажми <strong>⎙</strong> внизу → «На экран «Домой»» → «Добавить». Займёт 10 секунд."
+        : "Tap <strong>⎙</strong> below → «Add to Home Screen» → «Add». Takes 10 seconds.",
+    },
+    "ios-other": {
+      icon: "🧭",
+      title: ru ? "Открой в Safari" : "Open in Safari",
+      body:  ru
+        ? "Для установки скопируй адрес и открой в <strong>Safari</strong> — там есть нужная кнопка."
+        : "To install, copy the URL and open in <strong>Safari</strong> — it has the install option.",
+    },
+    "android-chrome": {
+      icon: "📲",
+      title: ru ? "Установить приложение" : "Install the app",
+      body:  deferredInstallPrompt
+        ? (ru ? "Нажми кнопку ниже — браузер сделает всё сам." : "Tap the button below — the browser handles the rest.")
+        : (ru ? "Нажми <strong>⋮</strong> → «Добавить на гл. экран» или «Установить приложение»." : "Tap <strong>⋮</strong> → «Add to Home Screen» or «Install app»."),
+    },
+    "android-samsung": {
+      icon: "📲",
+      title: ru ? "Добавить на экран" : "Add to Home Screen",
+      body:  ru
+        ? "Нажми <strong>☰</strong> → «Добавить страницу на» → «Главный экран»."
+        : "Tap <strong>☰</strong> → «Add page to» → «Home Screen».",
+    },
+    "android-other": {
+      icon: "📲",
+      title: ru ? "Добавить на экран" : "Add to Home Screen",
+      body:  ru
+        ? "В меню браузера найди «Добавить на гл. экран» или «Установить»."
+        : "Find «Add to Home Screen» or «Install» in your browser menu.",
+    },
+  };
+
+  const c = copy[platform] || copy["android-other"];
+  document.getElementById("pwa-icon").textContent = c.icon;
+  document.getElementById("pwa-title").textContent = c.title;
+  document.getElementById("pwa-body").innerHTML = c.body;
+  document.getElementById("pwa-note").textContent = ru
+    ? "💾 Данные сохранятся — они уже в этом браузере и будут доступны в приложении"
+    : "💾 Your data stays — it's already in this browser and will be in the app too";
+  document.getElementById("pwa-later").textContent   = ru ? "Напомнить позже"   : "Remind me later";
+
+  // Android Chrome with native prompt → install button triggers OS dialog
+  const installBtn = document.getElementById("pwa-install");
+  if (platform === "android-chrome" && deferredInstallPrompt) {
+    installBtn.textContent = ru ? "📲 Установить" : "📲 Install";
+    installBtn.onclick = triggerInstall;
+  } else {
+    installBtn.textContent = ru ? "Понятно, спасибо" : "Got it, thanks";
+    installBtn.onclick = () => dismissPwaHint(true);
+  }
+
+  el.classList.add("show");
+}
+
+async function triggerInstall() {
+  if (!deferredInstallPrompt) { dismissPwaHint(true); return; }
+  try {
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    dismissPwaHint(true); // permanent — they made a choice
+    deferredInstallPrompt = null;
+  } catch { dismissPwaHint(true); }
+}
+
+function dismissPwaHint(permanent) {
+  const el = document.getElementById("pwa-hint");
+  if (el) el.classList.remove("show");
+  if (permanent) {
+    const s = pwaHintState();
+    s.done = true;
+    LS.set(PWA_SK, s);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Boot — auth-gated
+ * ═══════════════════════════════════════════════════════════════════════ */
+initPreAuth();    // Theme/lang before auth resolves
+showAuthScreen(); // Default: auth screen shown
+
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    hideAuthScreen();
+    await initUserData();
+  } else {
+    currentUser = null;
+    exps = {}; incs = {}; cats = [];
+    showAuthScreen();
+  }
+});
+
+window.addEventListener("online",  () => { isOnline = true;  updateSyncBar(); syncPending(); });
+window.addEventListener("offline", () => { isOnline = false; updateSyncBar(); });
+</script>
+<!-- ─── PWA install hint ───────────────────────────────────────────── -->
+<div id="pwa-hint" class="pwa-hint" role="dialog" aria-label="Install hint">
+  <div class="pwa-row">
+    <span class="pwa-icon" id="pwa-icon">📲</span>
+    <div class="pwa-text">
+      <div class="pwa-title" id="pwa-title"></div>
+      <div class="pwa-body"  id="pwa-body"></div>
+    </div>
+    <button class="pwa-x" onclick="dismissPwaHint(false)" aria-label="Close">✕</button>
+  </div>
+  <div class="pwa-note" id="pwa-note"></div>
+  <div class="pwa-btns">
+    <button class="pwa-later"   id="pwa-later"   onclick="dismissPwaHint(false)"></button>
+    <button class="pwa-install" id="pwa-install" onclick="dismissPwaHint(true)"></button>
+  </div>
+</div>
+
+<!-- ─── Confirm modal ─────────────────────────────────────────────────── -->
+<div id="confirm-modal" style="display:none" class="ee-back" onclick="closeConfirm(false)">
+  <div class="conf-card" onclick="event.stopPropagation()">
+    <span class="conf-icon" id="confirm-icon">🗑️</span>
+    <p class="conf-msg" id="confirm-msg"></p>
+    <div class="conf-btns">
+      <button class="abtn sec" id="confirm-no"  onclick="closeConfirm(false)">—</button>
+      <button class="abtn exp" id="confirm-yes" onclick="closeConfirm(true)">—</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Easter egg ──────────────────────────────────────────────────── -->
+<div id="easter-egg" style="display:none" class="ee-back" onclick="closeEasterEgg()">
+  <div id="ee-particles" class="ee-particles"></div>
+  <div class="ee-card" onclick="event.stopPropagation()">
+    <button class="ee-x" onclick="closeEasterEgg()">✕</button>
+
+    <div class="ee-badge" id="ee-badge">🥚 Easter egg</div>
+
+    <div class="ee-avatar-wrap">
+      <div class="ee-avatar-inner">
+        <img src="data:image/jpeg;base64,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" class="ee-img" alt="Alexander Morozov"/>
+      </div>
+    </div>
+
+    <div class="ee-name" id="ee-name">Alex Dev</div>
+    <div class="ee-role" id="ee-role">Builder · Breaker · Debugger</div>
+
+    <p class="ee-bio" id="ee-bio">
+      Built WTFIMM?! in a few late-night sessions because spreadsheets don't spark joy
+      and budgeting apps are boring as hell.<br><br>
+      I ship things for the web — sometimes they even work on the first try.
+      If you dug deep enough to find this, you're my kind of person.
+    </p>
+
+    <div class="ee-links">
+      <a href="https://t.me/it_is_morozov" class="ee-link" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-2.01 9.47c-.148.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.918 14.39l-2.91-.92c-.65-.204-.66-.65.136-.96l10.862-4.188c.542-.195 1.016.134.556.926z"/></svg>
+        Telegram
+      </a>
+      <a href="https://www.instagram.com/undermoroz/" class="ee-link" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+        Instagram
+      </a>
+      <a href="mailto:undermoroz@gmail.com" class="ee-link">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        Email
+      </a>
+    </div>
+
+    <div class="ee-footer" id="ee-footer">
+      You tapped the logo 5 times. Respect. 🫡
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
