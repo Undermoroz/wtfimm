@@ -438,6 +438,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .auth-lang{display:flex;justify-content:center;gap:6px;margin-top:16px}
 .auth-lang-btn{background:transparent;border:1px solid transparent;font-size:12px;color:var(--text-mute);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;transition:.15s}
 .auth-lang-btn.on{color:var(--text);background:var(--card-bg2);border-color:var(--border)}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
+.btn-secondary:hover{background:var(--card-bg2);color:var(--text)}
+.danger-zone{margin-top:8px;padding:14px;border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:12px;background:color-mix(in srgb,var(--danger) 5%,transparent)}
 /* ─── Sync status bar ───────────────────────────────────────────────── */
 .sync-bar{font-size:11px;text-align:center;padding:3px 0;min-height:20px;transition:opacity .3s;line-height:1.5}
 .sync-bar.offline{color:var(--danger)}
@@ -601,6 +606,11 @@ const I18N = {
     tCatAdded:"✅ Категория добавлена", tCatDeleted:"🗑 Категория удалена", tCatUpdated:"✅ Категория обновлена",
     tIncSaved:"💰 Доход сохранён", tIncUpdated:"✅ Доход обновлён", tIncDeleted:"🗑 Доход удалён",
     tThemeChanged:"🎨 Тема изменена",
+    resetPassword:"Сбросить пароль", resetPasswordSent:"✉️ Ссылка отправлена на почту!",
+    deleteAccount:"Удалить аккаунт",
+    deleteAccountConfirm:"Это удалит все твои данные безвозвратно. Точно уверен?",
+    deleteAccountDone:"Аккаунт удалён. Пока! 👋",
+    deleting:"Удаляем...", sending:"Отправляем...",
     newCatPh:"Например: Спорт",
     incLabel:"💰 Доход",
     subtitle:"(Где, бл*дь, мои деньги?!)",
@@ -654,6 +664,11 @@ const I18N = {
     tCatAdded:"✅ Category added", tCatDeleted:"🗑 Category deleted", tCatUpdated:"✅ Category updated",
     tIncSaved:"💰 Income saved", tIncUpdated:"✅ Income updated", tIncDeleted:"🗑 Income deleted",
     tThemeChanged:"🎨 Theme changed",
+    resetPassword:"Reset password", resetPasswordSent:"✉️ Reset link sent to your email!",
+    deleteAccount:"Delete account",
+    deleteAccountConfirm:"This will permanently delete all your data. Are you sure?",
+    deleteAccountDone:"Account deleted. Bye! 👋",
+    deleting:"Deleting...", sending:"Sending...",
     newCatPh:"e.g. Sports",
     incLabel:"💰 Income",
     subtitle:"(Where The F*ck Is My Money?!)",
@@ -1019,12 +1034,36 @@ async function doAuth() {
   errEl.textContent = "";
 
   try {
-    const { error } = authMode === "login"
-      ? await sb.auth.signInWithPassword({ email, password: pass })
-      : await sb.auth.signUp({ email, password: pass });
-
-    if (error) errEl.textContent = translateAuthError(error.message, ru);
-    // Success handled by onAuthStateChange
+    if (authMode === "login") {
+      const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) errEl.textContent = translateAuthError(error.message, ru);
+      // Success handled by onAuthStateChange → SIGNED_IN
+    } else {
+      const redirectTo = window.location.href.split("?")[0].split("#")[0];
+      const { data, error } = await sb.auth.signUp({
+        email, password: pass,
+        options: { emailRedirectTo: redirectTo }
+      });
+      if (error) {
+        errEl.textContent = translateAuthError(error.message, ru);
+      } else if (data?.user && !data.session) {
+        // Email confirmation required — show message, don't wait for onAuthStateChange
+        errEl.style.color = "var(--success, #40c080)";
+        errEl.textContent = ru
+          ? "✉️ Письмо отправлено! Проверь почту и подтверди email."
+          : "✉️ Check your email and confirm your address.";
+        btn.disabled = false;
+        btn.textContent = ru ? "Войти →" : "Sign in →";
+        // Switch to login mode so they can sign in after confirming
+        setTimeout(() => {
+          errEl.style.color = "";
+          setAuthMode("login");
+        }, 4000);
+        return;
+      }
+      // If session exists immediately (email confirmation disabled in Supabase)
+      // → onAuthStateChange handles it
+    }
   } catch { errEl.textContent = ru ? "Ошибка соединения" : "Connection error"; }
 
   btn.disabled = false;
@@ -1040,6 +1079,53 @@ function translateAuthError(msg, ru) {
   return (ru ? "Ошибка: " : "Error: ") + msg;
 }
 
+
+async function doResetPassword() {
+  const ru = lang === "ru";
+  const email = currentUser?.email;
+  if (!email) return;
+  const btn = document.getElementById("btn-reset-pass");
+  if (btn) { btn.disabled = true; btn.textContent = t("sending"); }
+  try {
+    const redirectTo = window.location.href.split("?")[0].split("#")[0];
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) showToast((ru ? "Ошибка: " : "Error: ") + error.message, true);
+    else showToast(t("resetPasswordSent"));
+  } catch { showToast(ru ? "Ошибка соединения" : "Connection error", true); }
+  if (btn) { btn.disabled = false; btn.textContent = t("resetPassword"); }
+}
+
+async function doDeleteAccount() {
+  const ru = lang === "ru";
+  showConfirm(t("deleteAccountConfirm"), async () => {
+    const btn = document.getElementById("btn-del-acc");
+    if (btn) { btn.disabled = true; btn.textContent = t("deleting"); }
+    try {
+      // 1. Delete all user data from Supabase
+      const uid = currentUser.id;
+      await sb.from("expenses").delete().eq("user_id", uid);
+      await sb.from("income").delete().eq("user_id", uid);
+      await sb.from("user_data").delete().eq("user_id", uid);
+      // 2. Delete auth user via Edge Function (requires admin privileges)
+      //    Fallback: call Supabase auth admin delete via RPC if available
+      const { error } = await sb.rpc("delete_user");
+      if (error) throw new Error(error.message);
+      // 3. Clear local state
+      try {
+        Object.keys(localStorage)
+          .filter(k => k.startsWith("tracker_"))
+          .forEach(k => localStorage.removeItem(k));
+      } catch {}
+      exps = {}; incs = {}; cats = []; currentUser = null;
+      await sb.auth.signOut();
+      showToast(t("deleteAccountDone"));
+    } catch (e) {
+      showToast((ru ? "Ошибка удаления: " : "Delete error: ") + e.message, true);
+      if (btn) { btn.disabled = false; btn.textContent = t("deleteAccount"); }
+    }
+  }, "🗑️");
+}
+
 function doSignOut() {
   showConfirm(
     lang === "ru"
@@ -1047,12 +1133,15 @@ function doSignOut() {
       : "Sign out? Unsynced data may be lost.",
     async () => {
       try {
+        await sb.auth.signOut();
+      } catch {}
+      try {
         Object.keys(localStorage)
           .filter(k => k.startsWith("tracker_") && k !== "tracker_rate_v1" && k !== "tracker_pwa_hint_v1")
           .forEach(k => localStorage.removeItem(k));
       } catch {}
       exps = {}; incs = {}; cats = []; currentUser = null;
-      await sb.auth.signOut();
+      showAuthScreen();
     }, "🚪"
   );
 }
@@ -1705,6 +1794,10 @@ function rset() {
   <div class="sec-h">${t("setAccount")}</div>
   <div class="auth-email-badge">📧 ${email}</div>
   <button class="abtn exp" onclick="doSignOut()">🚪 ${t("signOut")}</button>
+  <button class="btn-secondary" id="btn-reset-pass" onclick="doResetPassword()">🔑 ${t("resetPassword")}</button>
+  <div class="danger-zone">
+    <button class="btn-danger" id="btn-del-acc" onclick="doDeleteAccount()">💀 ${t("deleteAccount")}</button>
+  </div>
 </div>
 
 <div class="sec">
@@ -1831,6 +1924,10 @@ function nav(d) {
   curMonth += d;
   if (curMonth < 1)  { curMonth = 12; curYear--; }
   if (curMonth > 12) { curMonth = 1;  curYear++; }
+  // Lower bound: January 2026
+  if (curYear < 2026 || (curYear === 2026 && curMonth < 1)) {
+    curYear = 2026; curMonth = 1;
+  }
   ensureMonth();
   render();
 }
@@ -1841,6 +1938,7 @@ function sv(v) {
   swipedItemId = null;
   editingCatId = null; newCatMode = false;
   editingIncomeId = null; editingIncomeMonth = null;
+  editingExpId = null; editingExpMonth = null;
   if (v === "add") {
     currentNotePh = pickNotePh();
     curSel = "uzs";
@@ -2502,11 +2600,24 @@ initPreAuth();    // Theme/lang before auth resolves
 showAuthScreen(); // Default: auth screen shown
 
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (session?.user) {
-    currentUser = session.user;
-    hideAuthScreen();
-    await initUserData();
-  } else {
+  if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+    if (session?.user && session.user.id !== currentUser?.id) {
+      currentUser = session.user;
+      hideAuthScreen();
+      await initUserData();
+    } else if (session?.user && !currentUser) {
+      currentUser = session.user;
+      hideAuthScreen();
+      await initUserData();
+    }
+  } else if (event === "INITIAL_SESSION") {
+    if (session?.user) {
+      currentUser = session.user;
+      hideAuthScreen();
+      await initUserData();
+    }
+    // No session on initial load → auth screen already shown by showAuthScreen()
+  } else if (event === "SIGNED_OUT") {
     currentUser = null;
     exps = {}; incs = {}; cats = [];
     showAuthScreen();
