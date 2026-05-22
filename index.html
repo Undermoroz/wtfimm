@@ -846,7 +846,13 @@ const PENDING_KEY = "tracker_pending_ops";
  * ═══════════════════════════════════════════════════════════════════════ */
 const SUPA_URL = "https://lmfvncwaanpccjgsowgx.supabase.co";
 const SUPA_KEY = "sb_publishable_PuABu8FQN5ZYFi_DaB3BoA_OwgCmrzQ";
-const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    persistSession:   true,
+    autoRefreshToken: true,
+    storageKey:       "wtfimm_auth"
+  }
+});
 
 /* ═══════════════════════════════════════════════════════════════════════
  *  State
@@ -1286,15 +1292,23 @@ function initPreAuth() {
   updateAuthUI();
 }
 
+// Races a promise against a timeout; throws "timeout" if too slow
+function withTimeout(promise, ms = 6000) {
+  const t = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms));
+  return Promise.race([promise, t]);
+}
+
 // Called after auth confirmed — loads user data, boots app
 async function initUserData() {
-  // Process any pending ops from offline session
-  await syncPending();
+  // Process any pending ops from offline session (non-fatal)
+  try { await syncPending(); } catch(e) { console.warn("syncPending failed:", e); }
 
-  // Load user_data from Supabase
+  // Load user_data from Supabase (with timeout so a hanging request never blocks render)
   if (isOnline) {
     try {
-      const { data: ud } = await sb.from("user_data").select("*").eq("user_id", currentUser.id).single();
+      const { data: ud } = await withTimeout(
+        sb.from("user_data").select("*").eq("user_id", currentUser.id).single()
+      );
       if (ud) {
         // Existing user
         cats = Array.isArray(ud.categories) && ud.categories.length ? ud.categories : DEFAULT_CATS.map(c=>({...c}));
@@ -2604,17 +2618,17 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if (session?.user && session.user.id !== currentUser?.id) {
       currentUser = session.user;
       hideAuthScreen();
-      await initUserData();
+      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
     } else if (session?.user && !currentUser) {
       currentUser = session.user;
       hideAuthScreen();
-      await initUserData();
+      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
     }
   } else if (event === "INITIAL_SESSION") {
     if (session?.user) {
       currentUser = session.user;
       hideAuthScreen();
-      await initUserData();
+      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
     }
     // No session on initial load → auth screen already shown by showAuthScreen()
   } else if (event === "SIGNED_OUT") {
