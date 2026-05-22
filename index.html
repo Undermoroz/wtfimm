@@ -223,7 +223,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .li{position:relative;overflow:hidden;border-bottom:1px solid var(--separator)}
 .li:last-child{border:none}
 .li.income .av{background:rgba(62,207,142,0.12)}
-.li-inner{display:flex;align-items:center;gap:11px;padding:12px 0;background:var(--card-bg);transition:transform .28s cubic-bezier(.25,.1,.25,1);will-change:transform}
+.li-inner{display:flex;align-items:center;gap:11px;padding:12px 0;background:var(--card-bg);transition:transform .28s cubic-bezier(.25,.1,.25,1);will-change:transform;position:relative;z-index:1}
 .li-del-sw{position:absolute;right:0;top:0;bottom:0;width:80px;background:var(--danger);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .ln{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -566,7 +566,7 @@ const I18N = {
     expense:"Расход", income:"Доход", balance:"Остаток",
     records:"записей", sumUnit:"сум",
     today:"сегодня", yesterday:"вчера", daysAgo:"дн. назад",
-    tabDash:"📊 Обзор", tabAdd:"➕ Добавить", tabLog:"📋 Журнал", tabSum:"📤 Сводка", tabSet:"⚙️",
+    tabDash:"📊 Обзор", tabAdd:"➕ Добавить", tabLog:"📋 Журнал", tabSum:"📤 Сводка", tabSet:"⚙️ Настройки",
     addingTo:"Добавление в:",
     formType:"Тип записи", formCat:"Категория", formCur:"Валюта",
     formAmt:"Сумма", formDate:"Дата", formNote:"Заметка (необязательно)",
@@ -624,7 +624,7 @@ const I18N = {
     expense:"Expense", income:"Income", balance:"Balance",
     records:"records", sumUnit:"sum",
     today:"today", yesterday:"yesterday", daysAgo:"days ago",
-    tabDash:"📊 Overview", tabAdd:"➕ Add", tabLog:"📋 Log", tabSum:"📤 Summary", tabSet:"⚙️",
+    tabDash:"📊 Overview", tabAdd:"➕ Add", tabLog:"📋 Log", tabSum:"📤 Summary", tabSet:"⚙️ Settings",
     addingTo:"Adding to:",
     formType:"Entry type", formCat:"Category", formCur:"Currency",
     formAmt:"Amount", formDate:"Date", formNote:"Note (optional)",
