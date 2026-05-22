@@ -471,6 +471,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .pwa-install{flex:1;padding:9px;font-size:12px;font-weight:700;border:none;border-radius:9px;background:var(--accent);color:var(--btn-primary-text);cursor:pointer;font-family:inherit;transition:.15s}
 .pwa-install:hover{filter:brightness(1.1)}
 /* ≤360px — older Androids, iPhone SE: tighter spacing */
+@media(hover:hover) and (pointer:fine){.li-del-sw{display:none}}
 @media (max-width:360px) {
   .card  {padding:15px 13px}
   .mnav  {padding:10px 12px}
@@ -1321,7 +1322,6 @@ async function initUserData() {
         sb.from("user_data").select("*").eq("user_id", currentUser.id).single()
       );
       if (ud) {
-        // Merge server data; re-render only if something actually changed
         const newCats = Array.isArray(ud.categories) && ud.categories.length
           ? ud.categories : cats;
         const s = ud.settings || {};
@@ -1344,7 +1344,6 @@ async function initUserData() {
         }
         if (changed) render();
       } else {
-        // First login — init defaults + migrate any local data
         cats = DEFAULT_CATS.map(c=>({...c}));
         await migrateLocalData();
         await saveUserData();
@@ -1354,7 +1353,7 @@ async function initUserData() {
     } catch { /* timeout or network error — already showing cached data */ }
   }
 
-  // ── Step 3: post-init (can run after first render) ──
+  // ── Step 3: post-init ──
   fetchRateIfNeeded();
   checkPwaHint();
 }
@@ -1665,6 +1664,7 @@ function rEditIncomeForm(inc) {
     <button class="abtn sec" onclick="cancelEditIncome()">${t("cancelBtn")}</button>
     <button class="abtn inc" onclick="doSaveEditIncome()">${t("saveChangesBtn")}</button>
   </div>
+  <button class="btn-danger" onclick="(()=>{const m=editingIncomeMonth,i=editingIncomeId;cancelEditIncome();doDelInc(m,i);})()">🗑️ ${t("delete")}</button>
 </div>
 `;
 }
@@ -1707,6 +1707,7 @@ function rEditExpForm(exp) {
     <button class="abtn sec" onclick="cancelEditExp()">${t("cancelBtn")}</button>
     <button class="abtn" onclick="doSaveEditExp()">${t("saveChangesBtn")}</button>
   </div>
+  <button class="btn-danger" onclick="(()=>{const m=editingExpMonth,i=editingExpId;cancelEditExp();doDel(m,i);})()">🗑️ ${t("delete")}</button>
 </div>
 `;
 }
