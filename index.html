@@ -1332,16 +1332,26 @@ async function initUserData() {
           LS.set(CK, cats);
           changed = true;
         }
-        if (s.lang && s.lang !== lang) {
+        // Lang: local wins if user already has a preference (e.g. selected on auth screen).
+        // Server value only used as fallback on a fresh device (no localStorage entry).
+        const hadLocalLang  = !!LS.get(LK);
+        const hadLocalTheme = !!LS.get(TK);
+        let needsSaveSettings = false;
+        if (!hadLocalLang && s.lang && s.lang !== lang) {
           lang = s.lang; LS.set(LK, lang); document.documentElement.lang = lang;
           changed = true;
+        } else if (hadLocalLang && s.lang && s.lang !== lang) {
+          needsSaveSettings = true; // local preference wins — push it to server
         }
-        if (s.theme && s.theme !== theme) {
+        if (!hadLocalTheme && s.theme && s.theme !== theme) {
           theme = s.theme; LS.set(TK, theme);
           document.documentElement.setAttribute("data-theme", theme);
           updateThemeColor(theme);
           changed = true;
+        } else if (hadLocalTheme && s.theme && s.theme !== theme) {
+          needsSaveSettings = true;
         }
+        if (needsSaveSettings) saveUserData();
         if (changed) render();
       } else {
         cats = DEFAULT_CATS.map(c=>({...c}));
