@@ -1303,37 +1303,60 @@ async function initUserData() {
   // Process any pending ops from offline session (non-fatal)
   try { await syncPending(); } catch(e) { console.warn("syncPending failed:", e); }
 
-  // Load user_data from Supabase (with timeout so a hanging request never blocks render)
+  // ── Step 1: render from cache immediately — user sees app at once ──
+  _loadCatsFromLS();
+  if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
+  LS.set(CK, cats);
+  ensureMonth();
+  render();
+  initSwipes();
+  applyLogoAnim();
+  applyLogoFont();
+  updateSyncBar();
+
+  // ── Step 2: sync user_data from Supabase in background ──
   if (isOnline) {
     try {
       const { data: ud } = await withTimeout(
         sb.from("user_data").select("*").eq("user_id", currentUser.id).single()
       );
       if (ud) {
-        // Existing user
-        cats = Array.isArray(ud.categories) && ud.categories.length ? ud.categories : DEFAULT_CATS.map(c=>({...c}));
+        // Merge server data; re-render only if something actually changed
+        const newCats = Array.isArray(ud.categories) && ud.categories.length
+          ? ud.categories : cats;
         const s = ud.settings || {};
-        if (s.lang)  { lang  = s.lang;  LS.set(LK, lang);  document.documentElement.lang = lang; }
-        if (s.theme) { theme = s.theme; LS.set(TK, theme); document.documentElement.setAttribute("data-theme", theme); updateThemeColor(theme); }
+        let changed = false;
+        if (JSON.stringify(newCats) !== JSON.stringify(cats)) {
+          cats = newCats;
+          if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
+          LS.set(CK, cats);
+          changed = true;
+        }
+        if (s.lang && s.lang !== lang) {
+          lang = s.lang; LS.set(LK, lang); document.documentElement.lang = lang;
+          changed = true;
+        }
+        if (s.theme && s.theme !== theme) {
+          theme = s.theme; LS.set(TK, theme);
+          document.documentElement.setAttribute("data-theme", theme);
+          updateThemeColor(theme);
+          changed = true;
+        }
+        if (changed) render();
       } else {
         // First login — init defaults + migrate any local data
         cats = DEFAULT_CATS.map(c=>({...c}));
         await migrateLocalData();
         await saveUserData();
+        LS.set(CK, cats);
+        render();
       }
-    } catch { _loadCatsFromLS(); }
-  } else { _loadCatsFromLS(); }
+    } catch { /* timeout or network error — already showing cached data */ }
+  }
 
-  if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
-  LS.set(CK, cats);
-  ensureMonth();
-  render();
-  initSwipes();
+  // ── Step 3: post-init (can run after first render) ──
   fetchRateIfNeeded();
-  applyLogoAnim();
-  applyLogoFont();
   checkPwaHint();
-  updateSyncBar();
 }
 
 function _loadCatsFromLS() {
