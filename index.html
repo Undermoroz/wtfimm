@@ -184,6 +184,12 @@ body{font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 .bar{height:5px;background:var(--card-bg2);border-radius:99px;overflow:hidden}
 .bf{height:100%;border-radius:99px;transition:width .4s}
 /* ─── Donut chart ───────────────────────────────────────────────────── */
+.cat-clickable{cursor:pointer;border-radius:10px;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.cat-clickable:hover{background:var(--card-bg2)}
+.cat-clickable:active{opacity:.75}
+.log-filter-chip{display:flex;align-items:center;gap:6px;padding:7px 12px;margin-bottom:10px;background:var(--card-bg2);border-radius:20px;font-size:13px;font-weight:500;width:fit-content}
+.log-filter-chip button{background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-dim);padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent}
+.log-filter-chip button:hover{color:var(--text)}
 .donut-wrap{display:flex;justify-content:center;margin-bottom:20px}
 .donut-svg{width:150px;height:150px;overflow:visible}
 .donut-total{font-size:20px;font-weight:700;fill:var(--text);font-family:'Inter',sans-serif;letter-spacing:-.02em}
@@ -895,6 +901,7 @@ let isSyncing    = false;
 let authMode     = "login"; // "login" | "register"
 let addType = "exp";  // "exp" or "inc"
 let lastCatId = null;  // remember last selected category
+let logFilterCat = null; // null = show all; catId = filter journal by category
 let rate = 12900;
 let rateTs = null;
 let rateBusy = false;
@@ -1560,6 +1567,16 @@ function fmtShort(n) {
   return String(Math.round(n));
 }
 
+function filterBycat(catId) {
+  logFilterCat = catId;
+  sv("log");
+}
+
+function clearLogFilter() {
+  logFilterCat = null;
+  render();
+}
+
 function rDonut(sorted, bc, expTotal) {
   if (!sorted.length || !expTotal) return "";
   const r = 66, cx = 100, cy = 100, sw = 26;
@@ -1598,7 +1615,7 @@ function rdash(s) {
   const mx = bc[sorted[0].id];
   return rDonut(sorted, bc, expTotal) + sorted.map(cat => {
     const sp = bc[cat.id], p = expTotal>0 ? Math.round(sp/expTotal*100) : 0;
-    return `<div class="cr">
+    return `<div class="cr cat-clickable" onclick="filterBycat('${cat.id}')" title="${escHTML(catName(cat))}">
 <div class="ct">
   <span class="cn">${cat.e} ${escHTML(catName(cat))}</span>
   <div style="text-align:right"><div class="ca">${fmt(sp)}</div><div class="cp">${p}%</div></div>
@@ -1632,14 +1649,6 @@ function radd(m) {
   return `
 <p class="ctx">${t("addingTo")} ${monthLabel(m)}</p>
 
-<div class="fg">
-  <label class="fl">${t("formType")}</label>
-  <div class="cur-row">
-    <button type="button" class="cb ${addType==="exp"?"exp-on":""}" onclick="setAddType('exp')">${t("typeExp")}</button>
-    <button type="button" class="cb ${addType==="inc"?"inc-on":""}" onclick="setAddType('inc')">${t("typeInc")}</button>
-  </div>
-</div>
-
 ${!isInc ? `
 <div class="fg"><label class="fl">${t("formCat")}</label><select id="fc">${catOpts}</select></div>
 ` : ""}
@@ -1663,7 +1672,7 @@ ${!isInc ? `
 
 <div class="fg">
   <label class="fl">${t("formNote")}</label>
-  <input type="text" id="fn" placeholder="${escHTML(currentNotePh)}" onkeydown="if(event.key==='Enter')doAdd()"/>
+  <input type="text" id="fn" placeholder="${escHTML(pickNotePh())}" onkeydown="if(event.key==='Enter')doAdd()"/>
 </div>
 
 <button class="abtn ${isInc?"inc":""}" onclick="doAdd()">${isInc ? t("addIncBtn") : t("addExpBtn")}</button>
@@ -1801,16 +1810,30 @@ function doSaveEditExp() {
 }
 
 function rlog(s, mid) {
-  const all = [
+  let all = [
     ...s.incList.map(e => ({...e, _type:"inc"})),
     ...s.expList.map(e => ({...e, _type:"exp"})),
   ];
-  if (!all.length) return `<div class="emp">${t("logEmpty")}</div>`;
+
+  // Active filter chip
+  let filterChip = "";
+  if (logFilterCat) {
+    const fc = catById(logFilterCat);
+    if (fc) {
+      all = all.filter(e => e._type === "exp" && e.catId === logFilterCat);
+      filterChip = `<div class="log-filter-chip">
+  <span>${fc.e} ${escHTML(catName(fc))}</span>
+  <button onclick="clearLogFilter()" aria-label="clear filter">✕</button>
+</div>`;
+    } else { logFilterCat = null; }
+  }
+
+  if (!all.length) return filterChip + `<div class="emp">${t("logEmpty")}</div>`;
   all.sort((a,b) => {
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
     return a.id < b.id ? 1 : -1;
   });
-  return all.map(e => {
+  return filterChip + all.map(e => {
     const tx = swipedItemId === e.id ? -80 : 0;
     const ts = `transform:translateX(${tx}px)`;
     if (e._type === "inc") {
@@ -2075,8 +2098,7 @@ function quickAdd(type) {
   curSel = "uzs";
   editingExpId = null; editingExpMonth = null;
   editingIncomeId = null; editingIncomeMonth = null;
-  view = "add";
-  render();
+  sv("add"); // triggers logo wave animation + render
   // Focus amount field
   setTimeout(() => document.getElementById("fa")?.focus(), 80);
 }
