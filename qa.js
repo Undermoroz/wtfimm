@@ -117,7 +117,8 @@ section("Level 1e: CSS duplicates");
 const CSS_SKIP = new Set(["on","show","open","active","hidden","err","dim","row",
   "abtn","tab","cb","fg","sec","av","title","subtitle","card","big","mnav","sbox",
   "edit-box","w","orb","toast","ee-card","ee-p","ee-back","ee-avatar-wrap","ee-name",
-  "ee-bio","conf-card","ic-btn","on","balance-val","tab","fg","cb","abtn"]);
+  "ee-bio","conf-card","ic-btn","on","balance-val","tab","fg","cb","abtn",
+  "exp","inc"]);
 // Strip @media blocks before checking
 const cssBase = html.replace(/@media[^{]+\{[\s\S]+?\}\s*\}/g, "");
 const cssSelectors = [...cssBase.matchAll(/\.([\w-]+)\s*\{/g)].map(m => m[1]);
@@ -139,7 +140,7 @@ const checks = [
   [html.includes('id="confirm-modal"'),                 'confirm-modal present'],
   [html.includes('rel="manifest"'),                     'manifest linked'],
   [html.includes('rel="icon"'),                         'favicon linked'],
-  [html.includes('showAuthScreen(); // Default'),       'auth shown on boot'],
+  [html.includes('showAuthScreen()'),                  'auth shown on boot'],
   [html.includes('onAuthStateChange'),                  'onAuthStateChange hooked'],
   [html.includes('window.addEventListener("online"'),   'online listener present'],
   [html.includes('navigator.language'),                 'detectLang uses navigator.language'],

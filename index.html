@@ -164,7 +164,15 @@ body{font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFon
 .mpick-btn:disabled{opacity:.22;cursor:default}
 /* ─── Tabs ──────────────────────────────────────────────────────────── */
 .tabs{display:flex;gap:5px;margin-bottom:12px}
+.qadd-row{display:flex;gap:8px;margin:10px 0 4px}
+.qadd-btn{flex:1;padding:11px 8px;border:none;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;letter-spacing:.01em;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.qadd-btn.exp{background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
+.qadd-btn.exp:hover{background:color-mix(in srgb,var(--danger) 28%,transparent)}
+.qadd-btn.inc{background:color-mix(in srgb,var(--success,#40c080) 18%,transparent);color:var(--success,#40c080);border:1px solid color-mix(in srgb,var(--success,#40c080) 35%,transparent)}
+.qadd-btn.inc:hover{background:color-mix(in srgb,var(--success,#40c080) 28%,transparent)}
 .tab{flex:1;padding:9px 2px;font-size:11px;cursor:pointer;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text-dim);transition:.15s;font-family:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;letter-spacing:.01em}
+.tab-lbl{font-size:10px}
+@media(max-width:400px){.tab-lbl{display:none}}
 .tab:hover{color:var(--text);border-color:var(--border-hover)}
 .tab.on{background:var(--accent);color:var(--btn-primary-text);border-color:transparent;font-weight:700}
 /* ─── Dashboard breakdown ───────────────────────────────────────────── */
@@ -235,7 +243,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .ab{border:none;background:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:5px;font-family:inherit;opacity:.65;transition:.15s}
 .ab:hover{opacity:1;background:var(--card-bg2)}
 .ab.del{color:var(--danger)}
-.ab.edit{color:var(--accent)}
+.ab.edit{color:var(--accent);font-size:15px;padding:2px 4px;opacity:.75}
 /* ─── Summary ───────────────────────────────────────────────────────── */
 .sbox{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
 .spre{font-family:'JetBrains Mono',ui-monospace,'Fira Code','Courier New',monospace;font-size:12px;white-space:pre-wrap;line-height:1.75;color:var(--text-dim);margin-bottom:14px}
@@ -438,6 +446,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .auth-lang{display:flex;justify-content:center;gap:6px;margin-top:16px}
 .auth-lang-btn{background:transparent;border:1px solid transparent;font-size:12px;color:var(--text-mute);cursor:pointer;padding:4px 10px;border-radius:8px;font-family:inherit;transition:.15s}
 .auth-lang-btn.on{color:var(--text);background:var(--card-bg2);border-color:var(--border)}
+.pass-wrap{position:relative;display:flex;align-items:center}
+.pass-wrap input{flex:1;padding-right:40px}
+.pass-eye{position:absolute;right:0;top:0;bottom:0;width:38px;background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:16px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pass-eye:hover{color:var(--text)}
 .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
 .btn-danger:hover{background:var(--danger);color:#fff}
 .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
@@ -524,13 +536,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
       </div>
       <div class="fg">
         <label class="fl" id="auth-pass-lbl">Пароль</label>
-        <input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••"
-               onkeydown="if(event.key==='Enter')doAuth()"/>
+        <div class="pass-wrap">
+          <input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter')doAuth()"/>
+          <button type="button" class="pass-eye" onclick="togglePassVis('auth-pass',this)" tabindex="-1">👁️</button>
+        </div>
       </div>
       <div class="fg" id="auth-pass2-fg" style="display:none">
         <label class="fl" id="auth-pass2-lbl">Повторите пароль</label>
-        <input type="password" id="auth-pass2" autocomplete="new-password" placeholder="••••••••"
-               onkeydown="if(event.key==='Enter')doAuth()"/>
+        <div class="pass-wrap">
+          <input type="password" id="auth-pass2" autocomplete="new-password" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter')doAuth()"/>
+          <button type="button" class="pass-eye" onclick="togglePassVis('auth-pass2',this)" tabindex="-1">👁️</button>
+        </div>
       </div>
       <div class="auth-err" id="auth-err"></div>
       <button class="abtn" id="auth-btn" onclick="doAuth()">Войти →</button>
@@ -567,7 +585,7 @@ const I18N = {
     expense:"Расход", income:"Доход", balance:"Остаток",
     records:"записей", sumUnit:"сум",
     today:"сегодня", yesterday:"вчера", daysAgo:"дн. назад",
-    tabDash:"📊 Обзор", tabAdd:"➕ Добавить", tabLog:"📋 Журнал", tabSum:"📤 Сводка", tabSet:"⚙️ Настройки",
+    tabDashE:"📊", tabDash:"Обзор", tabAddE:"➕", tabAdd:"Добавить", tabLogE:"📋", tabLog:"Журнал", tabSumE:"📤", tabSum:"Сводка", tabSetE:"⚙️", tabSet:"Настройки",
     addingTo:"Добавление в:",
     formType:"Тип записи", formCat:"Категория", formCur:"Валюта",
     formAmt:"Сумма", formDate:"Дата", formNote:"Заметка (необязательно)",
@@ -584,7 +602,7 @@ const I18N = {
     rateWillLock:"Этот курс будет зафиксирован для этой записи",
     logEmpty:"Журнал пуст",
     dashEmpty:"Нет данных за этот месяц.<br>Добавь первый расход или доход →",
-    delete:"Удалить", edit:"редактировать", deleteConfirm:"Удалить эту запись?",
+    delete:"Удалить", edit:"✏️", deleteConfirm:"Удалить эту запись?",
     deleteIncConfirm:"Удалить эту статью дохода?",
     sumNoData:"Безработный?",
     sumIncome:"💰 ДОХОД:", sumExpense:"💸 РАСХОД:", sumBalance:"📈 ОСТАТОК:",
@@ -625,7 +643,7 @@ const I18N = {
     expense:"Expense", income:"Income", balance:"Balance",
     records:"records", sumUnit:"sum",
     today:"today", yesterday:"yesterday", daysAgo:"days ago",
-    tabDash:"📊 Overview", tabAdd:"➕ Add", tabLog:"📋 Log", tabSum:"📤 Summary", tabSet:"⚙️ Settings",
+    tabDashE:"📊", tabDash:"Overview", tabAddE:"➕", tabAdd:"Add", tabLogE:"📋", tabLog:"Log", tabSumE:"📤", tabSum:"Summary", tabSetE:"⚙️", tabSet:"Settings",
     addingTo:"Adding to:",
     formType:"Entry type", formCat:"Category", formCur:"Currency",
     formAmt:"Amount", formDate:"Date", formNote:"Note (optional)",
@@ -642,7 +660,7 @@ const I18N = {
     rateWillLock:"This rate will be locked for this entry",
     logEmpty:"Log is empty",
     dashEmpty:"No data for this month.<br>Add the first expense or income →",
-    delete:"Delete", edit:"edit", deleteConfirm:"Delete this record?",
+    delete:"Delete", edit:"✏️", deleteConfirm:"Delete this record?",
     deleteIncConfirm:"Delete this income entry?",
     sumNoData:"Unemployed?",
     sumIncome:"💰 INCOME:", sumExpense:"💸 EXPENSE:", sumBalance:"📈 BALANCE:",
@@ -876,6 +894,7 @@ let isOnline     = navigator.onLine;
 let isSyncing    = false;
 let authMode     = "login"; // "login" | "register"
 let addType = "exp";  // "exp" or "inc"
+let lastCatId = null;  // remember last selected category
 let rate = 12900;
 let rateTs = null;
 let rateBusy = false;
@@ -1054,27 +1073,33 @@ async function doAuth() {
       if (error) {
         errEl.textContent = translateAuthError(error.message, ru);
       } else if (data?.user && !data.session) {
-        // Email confirmation required — show message, don't wait for onAuthStateChange
+        // Email confirmation required
         errEl.style.color = "var(--success, #40c080)";
         errEl.textContent = ru
           ? "✉️ Письмо отправлено! Проверь почту и подтверди email."
           : "✉️ Check your email and confirm your address.";
         btn.disabled = false;
         btn.textContent = ru ? "Войти →" : "Sign in →";
-        // Switch to login mode so they can sign in after confirming
-        setTimeout(() => {
-          errEl.style.color = "";
-          setAuthMode("login");
-        }, 4000);
+        setTimeout(() => { errEl.style.color = ""; setAuthMode("login"); }, 5000);
         return;
+      } else if (data?.user && data.session) {
+        // Immediate session (email confirmation disabled) — show toast, onAuthStateChange handles rest
+        showToast(ru ? "Аккаунт создан! Добро пожаловать 🎉" : "Account created! Welcome 🎉");
       }
-      // If session exists immediately (email confirmation disabled in Supabase)
-      // → onAuthStateChange handles it
+      // onAuthStateChange → SIGNED_IN handles navigation
     }
   } catch { errEl.textContent = ru ? "Ошибка соединения" : "Connection error"; }
 
   btn.disabled = false;
   updateAuthUI();
+}
+
+function togglePassVis(id, btn) {
+  const inp = document.getElementById(id);
+  if (!inp) return;
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "🙈" : "👁️";
 }
 
 function translateAuthError(msg, ru) {
@@ -1509,12 +1534,15 @@ ${showMonthPicker ? rMonthPicker() : ""}
     </div>
   ` : ""}
 </div>
+<div class="qadd-row">
+  <button class="qadd-btn exp" onclick="quickAdd('exp')">${t("tabAddE")} ${t("typeExp")}</button>
+  <button class="qadd-btn inc" onclick="quickAdd('inc')">${t("tabAddE")} ${t("typeInc")}</button>
+</div>
 <div class="tabs">
-  <button class="tab ${view==="dash"?"on":""}" onclick="sv('dash')">${t("tabDash")}</button>
-  <button class="tab ${view==="add"?"on":""}" onclick="sv('add')">${t("tabAdd")}</button>
-  <button class="tab ${view==="log"?"on":""}" onclick="sv('log')">${t("tabLog")}</button>
-  <button class="tab ${view==="sum"?"on":""}" onclick="sv('sum')">${t("tabSum")}</button>
-  <button class="tab ${view==="set"?"on":""}" onclick="sv('set')">${t("tabSet")}</button>
+  <button class="tab ${view==="dash"?"on":""}" onclick="sv('dash')">${t("tabDashE")} <span class="tab-lbl">${t("tabDash")}</span></button>
+  <button class="tab ${view==="log"?"on":""}" onclick="sv('log')">${t("tabLogE")} <span class="tab-lbl">${t("tabLog")}</span></button>
+  <button class="tab ${view==="sum"?"on":""}" onclick="sv('sum')">${t("tabSumE")} <span class="tab-lbl">${t("tabSum")}</span></button>
+  <button class="tab ${view==="set"?"on":""}" onclick="sv('set')">${t("tabSetE")} <span class="tab-lbl">${t("tabSet")}</span></button>
 </div>
 ${view==="dash" ? rdash(s) : ""}
 ${view==="add"  ? radd(m)  : ""}
@@ -1598,7 +1626,8 @@ function radd(m) {
   }
 
   const isInc = addType === "inc";
-  const catOpts = cats.map(c => `<option value="${c.id}">${c.e} ${escHTML(catName(c))}</option>`).join("");
+  const effectiveCat = lastCatId && catById(lastCatId) ? lastCatId : (cats[0]?.id || "other");
+  const catOpts = cats.map(c => `<option value="${c.id}" ${c.id === effectiveCat ? "selected" : ""}>${c.e} ${escHTML(catName(c))}</option>`).join("");
 
   return `
 <p class="ctx">${t("addingTo")} ${monthLabel(m)}</p>
@@ -1792,7 +1821,7 @@ function rlog(s, mid) {
       <div class="ln">${t("incLabel")}${e.note?" · "+escHTML(e.note):""}</div>
       <div class="lm">${e.date} · 🔒 1$=${fmt(e.rate)}</div>
     </div>
-    <div style="text-align:right;flex-shrink:0">
+    <div style="text-align:right;flex-shrink:0;padding-right:10px">
       <div class="la inc-amt">+${fmt(e.amount)}</div>
       ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
       <div class="actions">
@@ -1811,7 +1840,7 @@ function rlog(s, mid) {
       <div class="ln">${escHTML(catName(cat))}</div>
       <div class="lm">${e.date}${e.note?" · "+escHTML(e.note):""}</div>
     </div>
-    <div style="text-align:right;flex-shrink:0">
+    <div style="text-align:right;flex-shrink:0;padding-right:10px">
       <div class="la">${fmt(e.amount)}</div>
       ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
       <div class="actions">
@@ -1841,11 +1870,6 @@ function rset() {
 <div class="sec">
   <div class="sec-h">${t("setAccount")}</div>
   <div class="auth-email-badge">📧 ${email}</div>
-  <button class="abtn exp" onclick="doSignOut()">🚪 ${t("signOut")}</button>
-  <button class="btn-secondary" id="btn-reset-pass" onclick="doResetPassword()">🔑 ${t("resetPassword")}</button>
-  <div class="danger-zone">
-    <button class="btn-danger" id="btn-del-acc" onclick="doDeleteAccount()">💀 ${t("deleteAccount")}</button>
-  </div>
 </div>
 
 <div class="sec">
@@ -1883,6 +1907,15 @@ function rset() {
     </div>
     <button class="abtn sec" style="margin-top:12px" onclick="startNewCat()">${t("setAddCat")}</button>
   ` : ""}
+</div>
+
+<div class="sec">
+  <div class="sec-h">${t("setAccount")}</div>
+  <button class="btn-secondary" id="btn-reset-pass" onclick="doResetPassword()">🔑 ${t("resetPassword")}</button>
+  <button class="abtn exp" style="margin-top:8px" onclick="doSignOut()">🚪 ${t("signOut")}</button>
+  <div class="danger-zone" style="margin-top:12px">
+    <button class="btn-danger" id="btn-del-acc" onclick="doDeleteAccount()">💀 ${t("deleteAccount")}</button>
+  </div>
 </div>
 `;
 }
@@ -2037,6 +2070,17 @@ function updateThemeColor(th) {
   if (meta) meta.content = THEME_COLORS[th] || THEME_COLORS.dark;
 }
 
+function quickAdd(type) {
+  addType = (type === "inc") ? "inc" : "exp";
+  curSel = "uzs";
+  editingExpId = null; editingExpMonth = null;
+  editingIncomeId = null; editingIncomeMonth = null;
+  view = "add";
+  render();
+  // Focus amount field
+  setTimeout(() => document.getElementById("fa")?.focus(), 80);
+}
+
 function setAddType(type) {
   if (type !== "exp" && type !== "inc") return;
   addType = type;
@@ -2098,6 +2142,7 @@ function doAdd() {
   } else {
     const catId = document.getElementById("fc")?.value || "other";
     if (!catById(catId)) { showToast("Invalid category", true); return; }
+    lastCatId = catId; // remember for next add
     const entry = { id, catId, amount, note, date };
     if (usd !== undefined) entry.usd = usd;
     exps[m.id] = [...(exps[m.id] || []), entry];
@@ -2428,7 +2473,7 @@ function closeEasterEgg() {
  *  — Swipe on mnav bar       → prev / next month
  *  — Swipe on content below  → prev / next tab
  * ═══════════════════════════════════════════════════════════════════════ */
-const SWIPE_TAB_ORDER = ["dash","add","log","sum","set"];
+const SWIPE_TAB_ORDER = ["dash","log","sum","set"];
 const SWIPE_MIN_X  = 62;  // min horizontal distance (px)
 const SWIPE_RATIO  = 1.8; // horizontal must dominate vertical by this ratio
 
@@ -2645,7 +2690,9 @@ function dismissPwaHint(permanent) {
  *  Boot — auth-gated
  * ═══════════════════════════════════════════════════════════════════════ */
 initPreAuth();    // Theme/lang before auth resolves
-showAuthScreen(); // Default: auth screen shown
+// Only show auth screen if no cached session exists.
+// INITIAL_SESSION fires from localStorage (no network needed) and handles hide/show.
+if (!localStorage.getItem("wtfimm_auth")) showAuthScreen();
 
 sb.auth.onAuthStateChange(async (event, session) => {
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
@@ -2663,8 +2710,10 @@ sb.auth.onAuthStateChange(async (event, session) => {
       currentUser = session.user;
       hideAuthScreen();
       try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
+    } else {
+      // No valid session — show auth screen now (skipped at boot to avoid flash)
+      showAuthScreen();
     }
-    // No session on initial load → auth screen already shown by showAuthScreen()
   } else if (event === "SIGNED_OUT") {
     currentUser = null;
     exps = {}; incs = {}; cats = [];
