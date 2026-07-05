@@ -2,6 +2,10 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
+<!-- CSP: даже при гипотетическом XSS токен нельзя отправить на чужой домен (connect-src),
+     нельзя подгрузить чужой скрипт (script-src) и вставить object/base (none) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://lmfvncwaanpccjgsowgx.supabase.co https://open.er-api.com https://api.exchangerate-api.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"/>
+<meta name="referrer" content="no-referrer"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0e0e1a" id="meta-theme-color"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -17,6 +21,17 @@
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script type="text/javascript">
+// ── Clickjacking guard (GH Pages can't send X-Frame-Options) ──
+if (window.top !== window.self) {
+  try { window.top.location = window.self.location; }
+  catch (e) { document.documentElement.innerHTML = ""; }
+}
+// ── Capture OAuth redirect markers BEFORE supabase-js consumes the URL.
+// Used by the device-trust gate: arriving via Google OAuth = strong proof
+// of account ownership → device is trusted without an extra email code.
+window.__bootOAuth = /access_token=|refresh_token=|[?&]code=/.test(location.hash + location.search);
+</script>
 <title>WTFIMM?!</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -512,6 +527,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .btn-secondary:hover{background:var(--card-bg2);color:var(--text)}
 .danger-zone{margin-top:8px;padding:14px;border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:12px;background:color-mix(in srgb,var(--danger) 5%,transparent)}
 /* ─── Sync status bar ───────────────────────────────────────────────── */
+.otp-info{font-size:13.5px;color:var(--text-dim);margin-bottom:14px;line-height:1.5;word-break:break-all}
+#otp-code{width:100%;text-align:center;font-size:22px;letter-spacing:.35em;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace}
+#otp-resend-btn[disabled]{opacity:.5;cursor:default}
 .sync-bar{font-size:11px;text-align:center;padding:3px 0;min-height:20px;transition:opacity .3s;line-height:1.5}
 .sync-bar.offline{color:var(--danger)}
 .sync-bar.syncing{color:var(--accent)}
@@ -626,6 +644,28 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
 </div>
+<!-- ─── New-device email verification (OTP gate) ──────────────────── -->
+<div id="otp-screen" class="auth-screen" style="display:none">
+  <div class="auth-box">
+    <h1 class="title" style="margin-bottom:6px">WTFIMM?!</h1>
+    <p class="subtitle" id="otp-title"></p>
+    <div class="auth-card">
+      <p class="otp-info"><span id="otp-sent-lbl"></span><br/><b id="otp-email"></b></p>
+      <div class="fg">
+        <input type="text" id="otp-code" inputmode="numeric" autocomplete="one-time-code"
+               maxlength="6" pattern="[0-9]*"
+               onkeydown="if(event.key==='Enter')doVerifyOtp()"/>
+      </div>
+      <div class="auth-err" id="otp-err"></div>
+      <button class="abtn" id="otp-verify-btn" onclick="doVerifyOtp()"></button>
+      <button class="btn-secondary" id="otp-resend-btn" onclick="doResendOtp()"></button>
+      <button class="btn-secondary" id="otp-signout-btn" onclick="otpSignOut()"></button>
+    </div>
+  </div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
 <div class="w" id="main-app">
   <h1 class="title" id="logo" onclick="onLogoTap()">WTFIMM?!</h1>
   <p class="subtitle" id="subtitle-el">(Where The F*ck Is My Money?!)</p>
@@ -735,6 +775,17 @@ const I18N = {
     csvCur:"Валюта", csvSecAmount:"Сумма (втор.)", csvRate:"Курс", csvNote:"Заметка",
     authOr:"или", googleBtn:"Войти через Google",
     linkGoogle:"Привязать Google", googleLinked:"Google привязан",
+    otpTitle:"Подтверди вход",
+    otpSent:"Новое устройство. Код отправлен на",
+    otpPh:"6-значный код",
+    otpVerify:"Подтвердить →",
+    otpResend:"Отправить код ещё раз",
+    otpResendIn:"Повторно через",
+    otpWrong:"Неверный или просроченный код",
+    otpTooMany:"Слишком много попыток — войди заново",
+    otpSignOut:"Это не я — выйти",
+    otpSendFail:"Не удалось отправить код — попробуй ещё раз",
+    tSessionExpired:"Сессия истекла (7 дней) — войди заново",
   },
   en: {
     expense:"Expense", income:"Income", balance:"Balance",
@@ -830,6 +881,17 @@ const I18N = {
     csvCur:"Currency", csvSecAmount:"Amount (sec.)", csvRate:"Rate", csvNote:"Note",
     authOr:"or", googleBtn:"Sign in with Google",
     linkGoogle:"Link Google", googleLinked:"Google linked",
+    otpTitle:"Verify sign-in",
+    otpSent:"New device. Code sent to",
+    otpPh:"6-digit code",
+    otpVerify:"Verify →",
+    otpResend:"Resend code",
+    otpResendIn:"Resend in",
+    otpWrong:"Wrong or expired code",
+    otpTooMany:"Too many attempts — sign in again",
+    otpSignOut:"Not me — sign out",
+    otpSendFail:"Couldn't send the code — try again",
+    tSessionExpired:"Session expired (7 days) — sign in again",
   }
 };
 
@@ -985,6 +1047,7 @@ const COLOR_GRID = [
 const LS = {
   get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch{return null;}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}},
+  del(k){try{localStorage.removeItem(k);}catch{}},
 };
 const ek = id => "tracker_exp_"+id;
 const ik = id => "tracker_inc_"+id;
@@ -996,6 +1059,18 @@ const LCK = "tracker_lastcat_v1";
 const DK  = "tracker_debts_v1";
 const CURK = "tracker_cur_v1";
 const UIDK = "tracker_uid_v1";
+// ── Session TTL & device trust ──────────────────────────────────────
+// Клиентский слой: TTL сессии 7 дней + email-код на новом устройстве.
+// Серверный слой (обязателен, см. STATE.md): Dashboard → Auth → Sessions.
+const SESS_TTL_MS  = 7  * 864e5;   // 7 дней — принудительный re-login
+const TRUST_TTL_MS = 30 * 864e5;   // 30 дней — доверие устройству
+const sessK  = uid => `tracker_sessts_v1_${uid}`;
+const trustK = uid => `tracker_trust_v1_${uid}`;
+function isTrustedDevice(uid) {
+  const tr = LS.get(trustK(uid));
+  return !!(tr && tr.ts && (Date.now() - tr.ts) < TRUST_TTL_MS);
+}
+function markTrusted(uid) { LS.set(trustK(uid), { ts: Date.now() }); }
 const PENDING_KEY = "tracker_pending_ops";
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -1079,6 +1154,14 @@ const tod = () => new Date().toISOString().slice(0,10);
 const catById = id => cats.find(c => c.id===id) || cats.find(c => c.id==="other") || cats[0];
 const catName = c => c ? (c[`n_${lang}`] || c.n_ru || c.n_en || "?") : "?";
 const escHTML = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+// ── Server-row sanitizers ────────────────────────────────────────────
+// ids/dates из Supabase интерполируются в onclick('${id}') и value="${date}".
+// RLS ограничивает это своими же строками (self-XSS), но пользователь может
+// вписать crafted-строку в свою таблицу напрямую через API — валидируем формат
+// на входе, чтобы вектор не существовал вовсе.
+const safeId   = v => (typeof v === "string" && /^[\w-]{1,64}$/.test(v)) ? v : null;
+const safeDate = v => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v : null;
+const safeNum  = v => (typeof v === "number" && isFinite(v)) ? v : 0;
 // ── Currency helpers ────────────────────────────────────────────────
 const curSym     = () => (CURRENCIES[curPrimary]?.sym?.[lang]) || curPrimary;
 const hasSec     = () => !!curSecondary;
@@ -1223,6 +1306,126 @@ function showAuthScreen() {
 }
 function hideAuthScreen() {
   const el = document.getElementById("auth-screen");
+  if (el) el.style.display = "none";
+}
+
+/* ─── Session gate: TTL + device trust + email OTP ──────────────────
+ * Единая точка входа для любой появившейся сессии.
+ * 1) TTL: сессии старше 7 дней принудительно завершаются (re-login).
+ * 2) Доверие устройству: OAuth-редирект (Google) = доверие сразу;
+ *    иначе на новом устройстве — 6-значный код на email.
+ * Это КЛИЕНТСКИЙ слой (deterrent + анти-hijack скопированного токена).
+ * Серверный слой настраивается в Supabase Dashboard — см. STATE.md. */
+let appEntered = false;
+let otpGateActive = false;
+let otpAttempts = 0;
+let otpResendTs = 0;
+let otpEmail = null;
+
+async function enterApp(session) {
+  if (appEntered || !session?.user) return;
+  const uid = session.user.id;
+  // 1) 7-day TTL — клиентская половина (серверная: Dashboard time-box)
+  const st = LS.get(sessK(uid));
+  if (st && (Date.now() - st) > SESS_TTL_MS) {
+    LS.del(sessK(uid));
+    await sb.auth.signOut();
+    showToast(t("tSessionExpired"), true);
+    return; // SIGNED_OUT покажет auth-экран
+  }
+  // 2) Доверие устройству
+  if (window.__bootOAuth) { markTrusted(uid); window.__bootOAuth = false; }
+  if (!isTrustedDevice(uid)) {
+    if (!otpGateActive) await startOtpGate(session.user);
+    return;
+  }
+  // 3) Впуск
+  appEntered = true;
+  otpGateActive = false;
+  if (!st) LS.set(sessK(uid), Date.now());
+  currentUser = session.user;
+  hideOtpScreen(); hideAuthScreen();
+  try { await initUserData(); } catch(e) { console.error("initUserData:", e); appEntered = false; showAuthScreen(); }
+}
+
+async function startOtpGate(user) {
+  otpGateActive = true;
+  otpEmail = user.email;
+  hideAuthScreen(); showOtpScreen();
+  await sendOtpCode();
+}
+
+async function sendOtpCode() {
+  const errEl = document.getElementById("otp-err");
+  try {
+    const { error } = await sb.auth.signInWithOtp({
+      email: otpEmail, options: { shouldCreateUser: false }
+    });
+    if (error) { errEl.textContent = t("otpSendFail"); return; }
+    otpResendTs = Date.now();
+    tickResend();
+  } catch { errEl.textContent = t("otpSendFail"); }
+}
+
+function tickResend() {
+  const btn = document.getElementById("otp-resend-btn");
+  if (!btn) return;
+  const left = Math.max(0, 60 - Math.floor((Date.now() - otpResendTs) / 1000));
+  if (left > 0) {
+    btn.disabled = true;
+    btn.textContent = `${t("otpResendIn")} ${left}s`;
+    setTimeout(tickResend, 1000);
+  } else {
+    btn.disabled = false;
+    btn.textContent = t("otpResend");
+  }
+}
+
+async function doVerifyOtp() {
+  const errEl = document.getElementById("otp-err");
+  const code = (document.getElementById("otp-code")?.value || "").trim();
+  if (!/^\d{6}$/.test(code)) { errEl.textContent = t("otpWrong"); return; }
+  if (++otpAttempts > 5) { errEl.textContent = t("otpTooMany"); await otpSignOut(); return; }
+  const btn = document.getElementById("otp-verify-btn");
+  btn.disabled = true;
+  try {
+    const { data, error } = await sb.auth.verifyOtp({ email: otpEmail, token: code, type: "email" });
+    if (error || !data?.session) { errEl.textContent = t("otpWrong"); btn.disabled = false; return; }
+    markTrusted(data.session.user.id);
+    otpAttempts = 0;
+    await enterApp(data.session);
+  } catch { errEl.textContent = t("otpWrong"); btn.disabled = false; }
+}
+
+async function doResendOtp() {
+  if (Date.now() - otpResendTs < 60000) return;
+  await sendOtpCode();
+}
+
+async function otpSignOut() {
+  hideOtpScreen();
+  otpGateActive = false;
+  otpEmail = null; otpAttempts = 0;
+  await sb.auth.signOut();
+}
+
+function showOtpScreen() {
+  const el = document.getElementById("otp-screen");
+  if (!el) return;
+  document.getElementById("otp-title").textContent = t("otpTitle");
+  document.getElementById("otp-sent-lbl").textContent = t("otpSent");
+  document.getElementById("otp-email").textContent = otpEmail || "";
+  document.getElementById("otp-code").value = "";
+  document.getElementById("otp-code").placeholder = t("otpPh");
+  document.getElementById("otp-err").textContent = "";
+  document.getElementById("otp-verify-btn").textContent = t("otpVerify");
+  document.getElementById("otp-verify-btn").disabled = false;
+  document.getElementById("otp-signout-btn").textContent = t("otpSignOut");
+  el.style.display = "flex";
+  setTimeout(() => document.getElementById("otp-code")?.focus(), 80);
+}
+function hideOtpScreen() {
+  const el = document.getElementById("otp-screen");
   if (el) el.style.display = "none";
 }
 
@@ -1551,14 +1754,21 @@ async function loadDebtsFromSupabase() {
     const { data } = await withTimeout(sb.from("debts").select("*").eq("user_id", currentUser.id));
     if (!data) return;
     const mapped = data.map(r => {
-      const d = { id: r.id, dir: r.dir, person: r.person || "", amount: r.amount,
-        rate: r.rate, paid: r.paid || 0, note: r.note || "", date: r.date };
-      if (Array.isArray(r.repayments)) d.repayments = r.repayments;
+      const d = { id: safeId(r.id), dir: r.dir === "i_owe" ? "i_owe" : "owed_me",
+        person: r.person || "", amount: safeNum(r.amount),
+        rate: safeNum(r.rate), paid: safeNum(r.paid), note: r.note || "",
+        date: safeDate(r.date) || tod() };
+      if (Array.isArray(r.repayments)) {
+        d.repayments = r.repayments
+          .map(x => ({ id: safeId(x?.id) || ("r" + Math.random().toString(36).slice(2,10)),
+                       amount: safeNum(x?.amount), date: safeDate(x?.date) || d.date }))
+          .filter(x => x.amount > 0);
+      }
       if (r.usd != null) d.usd = r.usd;
-      if (r.due) d.due = r.due;
+      if (safeDate(r.due)) d.due = r.due;
       if (r.closed_at) d.closedAt = r.closed_at;
       return migrateDebtRepayments(d);
-    });
+    }).filter(d => d.id);
     if (JSON.stringify(mapped) !== JSON.stringify(debts)) {
       debts = mapped;
       LS.set(DK, debts);
@@ -1588,11 +1798,15 @@ async function loadMonthFromSupabase(monthId) {
       sb.from("income").select("*").eq("user_id", currentUser.id).eq("month_id", monthId),
     ]);
     if (expData) {
-      exps[monthId] = expData.map(r => ({ id: r.id, catId: r.cat_id, amount: r.amount, usd: r.usd, note: r.note, date: r.date }));
+      exps[monthId] = expData
+        .map(r => ({ id: safeId(r.id), catId: safeId(r.cat_id) || "other", amount: safeNum(r.amount), usd: r.usd, note: r.note, date: safeDate(r.date) || tod() }))
+        .filter(e => e.id);
       LS.set(ek(monthId), exps[monthId]);
     }
     if (incData) {
-      incs[monthId] = incData.map(r => ({ id: r.id, amount: r.amount, usd: r.usd, note: r.note, date: r.date, rate: r.rate }));
+      incs[monthId] = incData
+        .map(r => ({ id: safeId(r.id), amount: safeNum(r.amount), usd: r.usd, note: r.note, date: safeDate(r.date) || tod(), rate: safeNum(r.rate) }))
+        .filter(e => e.id);
       LS.set(ik(monthId), incs[monthId]);
     }
   } catch {}
@@ -3679,27 +3893,22 @@ if (!localStorage.getItem("wtfimm_auth")) showAuthScreen();
 
 sb.auth.onAuthStateChange(async (event, session) => {
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
-    if (session?.user && session.user.id !== currentUser?.id) {
-      currentUser = session.user;
-      hideAuthScreen();
-      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
-    } else if (session?.user && !currentUser) {
-      currentUser = session.user;
-      hideAuthScreen();
-      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
+    if (session?.user && (session.user.id !== currentUser?.id || !currentUser)) {
+      await enterApp(session);   // TTL → device trust → OTP gate → initUserData
     }
   } else if (event === "INITIAL_SESSION") {
     if (session?.user) {
-      currentUser = session.user;
-      hideAuthScreen();
-      try { await initUserData(); } catch(e) { console.error("initUserData:", e); showAuthScreen(); }
+      await enterApp(session);
     } else {
       // No valid session — show auth screen now (skipped at boot to avoid flash)
       showAuthScreen();
     }
   } else if (event === "SIGNED_OUT") {
+    if (currentUser) LS.del(sessK(currentUser.id));
     currentUser = null;
+    appEntered = false;
     exps = {}; incs = {}; cats = [];
+    hideOtpScreen();
     showAuthScreen();
   }
 });
@@ -3761,11 +3970,11 @@ window.addEventListener("offline", () => { isOnline = false; updateSyncBar(); })
     </p>
 
     <div class="ee-links">
-      <a href="https://t.me/it_is_morozov" class="ee-link" target="_blank" rel="noopener">
+      <a href="https://t.me/it_is_morozov" class="ee-link" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-2.01 9.47c-.148.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L6.918 14.39l-2.91-.92c-.65-.204-.66-.65.136-.96l10.862-4.188c.542-.195 1.016.134.556.926z"/></svg>
         Telegram
       </a>
-      <a href="https://www.instagram.com/undermoroz/" class="ee-link" target="_blank" rel="noopener">
+      <a href="https://www.instagram.com/undermoroz/" class="ee-link" target="_blank" rel="noopener noreferrer">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
         Instagram
       </a>

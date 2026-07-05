@@ -63,6 +63,10 @@ const REQUIRED_FNS = [
   "rdebts", "rDebtsCard", "rDebtItem", "rAddDebtForm", "rEditDebtForm",
   // Debts v2: repayment history + month events
   "migrateDebtRepayments", "repaySum", "debtEventsForMonth", "debtEvLabel",
+  // Security: sanitizers + session gate
+  "safeId", "safeDate", "safeNum",
+  "enterApp", "startOtpGate", "sendOtpCode", "doVerifyOtp", "doResendOtp",
+  "otpSignOut", "showOtpScreen", "hideOtpScreen", "isTrustedDevice", "markTrusted",
   // Render
   "render", "rdash", "radd", "rlog", "rsum", "rset",
   "rDonut", "fmtShort", "rEditExpForm", "rEditIncomeForm",
@@ -165,6 +169,16 @@ const checks = [
   [js.includes('repayments'),                           'repayments history wired'],
   [js.includes('debtEventsForMonth('),                  'debt events feed stats/journal'],
   [js.includes('"ab copy"'),                            'labeled copy-to-next button present'],
+  [html.includes('Content-Security-Policy'),            'CSP meta present'],
+  [html.includes('connect-src https://lmfvncwaanpccjgsowgx.supabase.co'), 'CSP connect-src pins Supabase (anti-exfiltration)'],
+  [html.includes('window.top !== window.self'),         'frame-busting (clickjacking) present'],
+  [html.includes('name="referrer" content="no-referrer"'), 'referrer policy set'],
+  [html.includes('id="otp-screen"'),                    'OTP gate screen present'],
+  [js.includes('signInWithOtp'),                        'OTP send wired'],
+  [js.includes('verifyOtp'),                            'OTP verify wired'],
+  [js.includes('shouldCreateUser: false'),              'OTP cannot create phantom users'],
+  [js.includes('SESS_TTL_MS'),                          '7-day session TTL wired'],
+  [js.includes('safeId(r.id)'),                         'server rows sanitized on load'],
   [(js.match(/`/g)||[]).length % 2 === 0,               'Even backtick count (no unclosed template literals)'],
 ];
 checks.forEach(([ok, label]) => ok ? pass(label) : fail(label));
