@@ -51,6 +51,16 @@ const REQUIRED_FNS = [
   "saveUserData", "loadMonthFromSupabase", "syncPending", "addPendingOp",
   // Categories
   "saveNewCat", "saveEditCat", "deleteCat",
+  // Journal search / copy / CSV
+  "setLogSearch", "logMatch", "copyToNext", "nextMonthId", "nextMonthDate",
+  "buildCsv", "doExportCsv", "csvEsc",
+  // OAuth
+  "doGoogleAuth", "linkGoogleAccount",
+  // Debts
+  "doAddDebt", "doRepay", "doDelDebt", "doSaveEditDebt",
+  "startAddDebt", "startEditDebt", "cancelEditDebt",
+  "dbUpsertDebt", "dbDeleteDebt", "loadDebtsFromSupabase",
+  "rdebts", "rDebtsCard", "rDebtItem", "rAddDebtForm", "rEditDebtForm",
   // Render
   "render", "rdash", "radd", "rlog", "rsum", "rset",
   "rDonut", "fmtShort", "rEditExpForm", "rEditIncomeForm",
@@ -147,6 +157,8 @@ const checks = [
   [html.includes('emailRedirectTo'),                    'emailRedirectTo set in signUp'],
   [html.includes('rpc("delete_user")'),                 'delete_user RPC call present'],
   [html.includes('resetPasswordForEmail'),              'resetPasswordForEmail present'],
+  [html.includes('signInWithOAuth'),                    'Google OAuth sign-in present'],
+  [html.includes('linkIdentity'),                       'Google account linking present'],
   [(js.match(/`/g)||[]).length % 2 === 0,               'Even backtick count (no unclosed template literals)'],
 ];
 checks.forEach(([ok, label]) => ok ? pass(label) : fail(label));

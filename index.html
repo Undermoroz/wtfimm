@@ -456,6 +456,45 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .pass-wrap input{flex:1;padding-right:40px}
 .pass-eye{position:absolute;right:0;top:0;bottom:0;width:38px;background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:16px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .pass-eye:hover{color:var(--text)}
+.set-sub{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.auth-or{display:flex;align-items:center;gap:10px;margin:14px 0 12px;color:var(--text-dim);font-size:12px}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:var(--border)}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px;background:var(--card-bg2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.gbtn:hover{border-color:var(--accent)}
+.log-search{position:relative;margin-bottom:10px}
+.log-search input{width:100%;padding:10px 36px 10px 14px;background:var(--card-bg2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .15s}
+.log-search input:focus{border-color:var(--accent)}
+.logq-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-dim);padding:4px 6px;line-height:1;-webkit-tap-highlight-color:transparent}
+.logq-x:hover{color:var(--text)}
+/* ── Debts ─────────────────────────────────────────────────────────── */
+.debts-card{cursor:pointer;transition:border-color .15s;padding:16px 20px}
+.debts-card:hover{border-color:var(--accent)}
+.debts-head{display:flex;justify-content:space-between;align-items:center}
+.debts-arrow{color:var(--text-dim);font-size:15px}
+.debts-row{display:flex;justify-content:space-between;gap:12px;margin-top:9px}
+.debts-none{color:var(--text-dim);font-size:13px;margin-top:7px}
+.dlbl{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.dval{font-size:17px;font-weight:700}
+.dval-pos{color:var(--success)}
+.dval-neg{color:var(--danger)}
+.debt-sec{margin-bottom:18px}
+.debt-sec-h{font-size:12px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.dli{padding:12px 2px;border-bottom:1px solid var(--separator)}
+.dli.closed{opacity:.55}
+.dli-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.dli-person{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dli-amt{font-size:15px;font-weight:700;flex-shrink:0}
+.dli-meta{font-size:12px;color:var(--text-dim);margin-top:3px}
+.dli-overdue{color:var(--danger);font-weight:600}
+.dli-paid{font-size:11px;color:var(--text-dim)}
+.dli-btns{display:flex;gap:8px;margin-top:8px}
+.dli-btn{background:var(--card-bg2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:9px;font-size:12.5px;font-family:inherit;cursor:pointer;transition:.15s}
+.dli-btn:hover{border-color:var(--accent)}
+.repay-row{display:flex;gap:8px;margin-top:8px;align-items:stretch}
+.repay-row input{flex:1;min-width:0}
+.rp-btn{background:var(--card-bg2);border:1px solid var(--border);color:var(--text);padding:0 16px;border-radius:10px;font-size:15px;font-family:inherit;cursor:pointer;transition:.15s}
+.rp-btn.ok{border-color:var(--success);color:var(--success)}
+.debt-hist-toggle{background:transparent;border:none;color:var(--text-dim);font-size:13px;font-family:inherit;cursor:pointer;padding:6px 0;font-weight:600}
 .btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
 .btn-danger:hover{background:var(--danger);color:#fff}
 .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:10px 18px;border-radius:12px;font-size:14px;font-family:inherit;cursor:pointer;width:100%;margin-top:8px;transition:.15s;font-weight:500}
@@ -526,7 +565,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 </head>
 <body>
 <!-- ─── Auth screen ────────────────────────────────────────────────── -->
-<div id="auth-screen" class="auth-screen">
+<!-- Hidden by default: the synchronous boot check shows it only when no
+     cached session exists — prevents the login-screen flash for logged-in users -->
+<div id="auth-screen" class="auth-screen" style="display:none">
   <div class="auth-box">
     <h1 class="title" style="margin-bottom:6px">WTFIMM?!</h1>
     <p class="subtitle" id="auth-subtitle">(Where The F*ck Is My Money?!)</p>
@@ -558,6 +599,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
       </div>
       <div class="auth-err" id="auth-err"></div>
       <button class="abtn" id="auth-btn" onclick="doAuth()">Войти →</button>
+      <div class="auth-or"><span id="auth-or-lbl">или</span></div>
+      <button type="button" class="gbtn" id="auth-google" onclick="doGoogleAuth()"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span id="auth-google-lbl">Войти через Google</span></button>
       <p class="auth-sub-note" id="auth-sub-note"></p>
     </div>
     <div class="auth-lang">
@@ -644,6 +687,35 @@ const I18N = {
     eeBio:"WTFIMM?! вырос из нескольких поздних вечеров и одного вопроса: куда, собственно, деваются деньги? Excel надоел, готовых решений не нашлось — написал своё.<br><br>Делаю штуки для веба — иногда они даже работают с первого раза. Кто докопался до этой пасхалки — тот мой человек.",
     eeFooter:"{n} тапов по лого. Уважаю. 🫡",
     eeBadge:"🥚 Пасхалка",
+    debtsTitle:"🤝 Долги",
+    debtOwedMe:"Мне должны", debtIOwe:"Я должен",
+    typeDebt:"🤝 Долг", addDebtBtn:"Добавить долг",
+    debtDirLbl:"Тип долга", debtPerson:"Кто / кому",
+    debtPersonPh:"например: Тимур",
+    debtDue:"Срок возврата (необязательно)",
+    debtRepay:"💰 Погасить", debtRepayPh:"сумма погашения",
+    debtHistory:"История", debtNoActive:"Нет активных долгов",
+    debtClosedOn:"закрыт", debtOverdue:"⚠️ просрочен",
+    debtOf:"из", debtPaidLbl:"Погашено",
+    tDebtSaved:"Долг записан ✓", tRepaySaved:"Погашение записано ✓",
+    tDebtClosed:"Долг закрыт 🎉", tEnterPerson:"Укажи, кто / кому",
+    editingDebt:"Редактирование долга",
+    debtEmpty:"Долгов пока нет.<br>И это прекрасно 🧘",
+    setCurrency:"💱 Валюта",
+    curPrimaryLbl:"Основная валюта", curSecondaryLbl:"Валютная пара (вторая валюта)",
+    curNone:"Без пары", changeBtn:"Сменить",
+    curChangeWarn:"Сменить основную валюту? Существующие записи не пересчитываются — их суммы будут показаны в новой валюте как есть.",
+    tCurSaved:"Валюта обновлена ✓",
+    tNoRate:"Курс ещё не загружен — секунду",
+    logSearchPh:"Поиск: сумма, заметка, категория…",
+    logNoMatches:"Ничего не найдено 🔍",
+    copyNext:"Скопировать в следующий месяц",
+    tCopiedNext:"Скопировано в следующий месяц ✓",
+    csvBtn:"⬇️ Скачать CSV",
+    csvDate:"Дата", csvType:"Тип", csvCat:"Категория", csvAmount:"Сумма",
+    csvCur:"Валюта", csvSecAmount:"Сумма (втор.)", csvRate:"Курс", csvNote:"Заметка",
+    authOr:"или", googleBtn:"Войти через Google",
+    linkGoogle:"Привязать Google", googleLinked:"Google привязан",
   },
   en: {
     expense:"Expense", income:"Income", balance:"Balance",
@@ -702,6 +774,35 @@ const I18N = {
     eeBio:"Built WTFIMM?! in a few late-night sessions because spreadsheets don't spark joy and budgeting apps are boring as hell.<br><br>I ship things for the web — sometimes they even work on the first try. If you dug deep enough to find this, you're my kind of person.",
     eeFooter:"You tapped the logo {n} time{s}. Respect. 🫡",
     eeBadge:"🥚 Easter egg",
+    debtsTitle:"🤝 Debts",
+    debtOwedMe:"Owed to me", debtIOwe:"I owe",
+    typeDebt:"🤝 Debt", addDebtBtn:"Add debt",
+    debtDirLbl:"Debt type", debtPerson:"Who / to whom",
+    debtPersonPh:"e.g. Timur",
+    debtDue:"Due date (optional)",
+    debtRepay:"💰 Repay", debtRepayPh:"repayment amount",
+    debtHistory:"History", debtNoActive:"No active debts",
+    debtClosedOn:"closed", debtOverdue:"⚠️ overdue",
+    debtOf:"of", debtPaidLbl:"Repaid",
+    tDebtSaved:"Debt saved ✓", tRepaySaved:"Repayment saved ✓",
+    tDebtClosed:"Debt closed 🎉", tEnterPerson:"Enter who / to whom",
+    editingDebt:"Editing debt",
+    debtEmpty:"No debts yet.<br>And that\u2019s beautiful 🧘",
+    setCurrency:"💱 Currency",
+    curPrimaryLbl:"Primary currency", curSecondaryLbl:"Currency pair (secondary)",
+    curNone:"No pair", changeBtn:"Change",
+    curChangeWarn:"Change primary currency? Existing entries are NOT recalculated — their amounts will be shown in the new currency as-is.",
+    tCurSaved:"Currency updated ✓",
+    tNoRate:"Rate not loaded yet — one sec",
+    logSearchPh:"Search: amount, note, category…",
+    logNoMatches:"No matches 🔍",
+    copyNext:"Copy to next month",
+    tCopiedNext:"Copied to next month ✓",
+    csvBtn:"⬇️ Download CSV",
+    csvDate:"Date", csvType:"Type", csvCat:"Category", csvAmount:"Amount",
+    csvCur:"Currency", csvSecAmount:"Amount (sec.)", csvRate:"Rate", csvNote:"Note",
+    authOr:"or", googleBtn:"Sign in with Google",
+    linkGoogle:"Link Google", googleLinked:"Google linked",
   }
 };
 
@@ -864,6 +965,10 @@ const RK = "tracker_rate_v1";
 const CK = "tracker_cats_v2";
 const LK = "tracker_lang_v1";
 const TK = "tracker_theme_v1";
+const LCK = "tracker_lastcat_v1";
+const DK  = "tracker_debts_v1";
+const CURK = "tracker_cur_v1";
+const UIDK = "tracker_uid_v1";
 const PENDING_KEY = "tracker_pending_ops";
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -893,7 +998,7 @@ let showMonthPicker = false;
 let pickerYear = curYear;
 let swipedItemId = null;
 let view = "dash";
-let curSel = "uzs";
+let curSel = "pri";  // "pri" = primary currency, "sec" = secondary (pair)
 // ── Auth & sync state ──────────────────────────────────────────────
 let currentUser  = null;   // Supabase User object
 let isOnline     = navigator.onLine;
@@ -902,6 +1007,27 @@ let authMode     = "login"; // "login" | "register"
 let addType = "exp";  // "exp" or "inc"
 let lastCatId = null;  // remember last selected category
 let logFilterCat = null; // null = show all; catId = filter journal by category
+let logSearchQ = "";     // journal text/amount search query
+// ── Currency settings (foundation for the future full i18n refactor) ──
+// `amount` is ALWAYS stored in PRIMARY currency units; the `usd` field
+// holds the original SECONDARY amount when the entry was typed in the
+// secondary currency. `rate` = primary units per 1 secondary unit.
+// Defaults (UZS primary / USD secondary) exactly match legacy semantics,
+// so existing data needs no migration.
+const CURRENCIES = {
+  UZS: { flag:"🇺🇿", sym:{ru:"сум",en:"sum"}, ph:"45000" },
+  USD: { flag:"🇺🇸", sym:{ru:"$",  en:"$"},   ph:"900"   },
+};
+let curPrimary   = "UZS";
+let curSecondary = "USD"; // null = no pair (single-currency mode)
+
+// ── Debts state ────────────────────────────────────────────────────
+let debts = [];              // all debts (not month-bound)
+let debtDir = "owed_me";     // direction in add form: "owed_me" | "i_owe"
+let editDebtDir = null;      // pending direction while editing
+let editingDebtId = null;    // debt being edited
+let repayingDebtId = null;   // debt with open inline repay input
+let showClosedDebts = false; // history section expanded
 let rate = 12900;
 let rateTs = null;
 let rateBusy = false;
@@ -926,6 +1052,29 @@ const tod = () => new Date().toISOString().slice(0,10);
 const catById = id => cats.find(c => c.id===id) || cats.find(c => c.id==="other") || cats[0];
 const catName = c => c ? (c[`n_${lang}`] || c.n_ru || c.n_en || "?") : "?";
 const escHTML = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+// ── Currency helpers ────────────────────────────────────────────────
+const curSym     = () => (CURRENCIES[curPrimary]?.sym?.[lang]) || curPrimary;
+const hasSec     = () => !!curSecondary;
+const secCode    = () => curSecondary || "USD"; // fallback label for legacy entries
+const secSymStr  = v  => secCode() === "USD" ? `$${v}` : `${v} ${(CURRENCIES[secCode()]?.sym?.[lang]) || secCode()}`;
+const phAmt      = c  => (lang === "ru" ? "напр. " : "e.g. ") + (CURRENCIES[c]?.ph || "100");
+const fmtRate    = r  => r >= 100 ? fmt(r) : String(+(+r).toPrecision(4));
+const pairKey    = () => curSecondary ? `${curPrimary}/${curSecondary}` : null;
+const canConvert = () => hasSec() && rate > 0; // pair set AND rate actually loaded
+const enterSecTxt = () => lang === "ru" ? `введи сумму в ${secCode()}` : `enter amount in ${secCode()}`;
+
+function curRowHTML(style) {
+  if (!hasSec()) return "";
+  const P = CURRENCIES[curPrimary] || {}, S = CURRENCIES[curSecondary] || {};
+  return `
+<div class="fg"${style ? ` style="${style}"` : ""}>
+  <label class="fl">${t("formCur")}</label>
+  <div class="cur-row">
+    <button type="button" class="cb ${curSel==="pri"?"on":""}" id="buz" onclick="setCur('pri')">${P.flag || ""} ${curPrimary}</button>
+    <button type="button" class="cb ${curSel==="sec"?"on":""}" id="bud" onclick="setCur('sec')">${S.flag || ""} ${curSecondary}</button>
+  </div>
+</div>`;
+}
 
 function recWord(n) {
   if (lang === "en") return n === 1 ? t("rec1") : t("rec5");
@@ -955,7 +1104,7 @@ function expTotalUsd(list) {
   let totalUsd = 0;
   for (const exp of list) {
     if (exp.usd != null) totalUsd += exp.usd;
-    else totalUsd += exp.amount / rate;
+    else if (rate > 0) totalUsd += exp.amount / rate;
   }
   return Math.round(totalUsd);
 }
@@ -964,8 +1113,8 @@ function incTotalUsd(list) {
   let totalUsd = 0;
   for (const inc of list) {
     if (inc.usd != null) totalUsd += inc.usd;
-    else if (inc.rate) totalUsd += inc.amount / inc.rate;
-    else totalUsd += inc.amount / rate;
+    else if (inc.rate > 0) totalUsd += inc.amount / inc.rate;
+    else if (rate > 0) totalUsd += inc.amount / rate;
   }
   return Math.round(totalUsd);
 }
@@ -984,7 +1133,7 @@ function showToast(msg, err=false) {
 }
 
 let _confirmCb = null;
-function showConfirm(msg, onYes, icon) {
+function showConfirm(msg, onYes, icon, yesLabel) {
   _confirmCb = onYes;
   const modal  = document.getElementById("confirm-modal");
   const msgEl  = document.getElementById("confirm-msg");
@@ -993,7 +1142,7 @@ function showConfirm(msg, onYes, icon) {
   const noBtn  = document.getElementById("confirm-no");
   if (msgEl)  msgEl.textContent  = msg;
   if (iconEl) iconEl.textContent = icon || "🗑️";
-  if (yesBtn) yesBtn.textContent = t("delete");
+  if (yesBtn) yesBtn.textContent = yesLabel || t("delete");
   if (noBtn)  noBtn.textContent  = t("cancelBtn");
   if (modal)  { modal.style.display = "flex"; document.body.style.overflow = "hidden"; }
 }
@@ -1041,6 +1190,8 @@ function updateAuthUI() {
   set("auth-btn", authMode === "login"
     ? (ru ? "Войти →" : "Sign in →")
     : (ru ? "Создать аккаунт →" : "Create account →"));
+  set("auth-or-lbl", t("authOr"));
+  set("auth-google-lbl", t("googleBtn"));
   set("auth-sub-note", authMode === "register"
     ? (ru ? "Уже есть аккаунт? Нажми «Войти»" : "Already have an account? Tap «Sign in»")
     : "");
@@ -1165,6 +1316,36 @@ async function doDeleteAccount() {
   }, "🗑️");
 }
 
+async function doGoogleAuth() {
+  const errEl = document.getElementById("auth-err");
+  if (errEl) errEl.textContent = "";
+  try {
+    const redirectTo = window.location.href.split("?")[0].split("#")[0];
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo }
+    });
+    if (error && errEl) errEl.textContent = translateAuthError(error.message, lang === "ru");
+    // On success the browser redirects to Google; the session comes back
+    // via onAuthStateChange → SIGNED_IN after the return redirect.
+  } catch (e) {
+    if (errEl) errEl.textContent = String(e?.message || e);
+  }
+}
+
+// Link Google to the CURRENT (already signed-in) account — keeps user_id,
+// so all data stays attached. Requires "manual linking" in Supabase Dashboard.
+async function linkGoogleAccount() {
+  try {
+    const redirectTo = window.location.href.split("?")[0].split("#")[0];
+    const { error } = await sb.auth.linkIdentity({
+      provider: "google",
+      options: { redirectTo }
+    });
+    if (error) showToast(translateAuthError(error.message, lang === "ru"), true);
+  } catch (e) { showToast(String(e?.message || e), true); }
+}
+
 function doSignOut() {
   showConfirm(
     lang === "ru"
@@ -1209,6 +1390,8 @@ async function syncPending() {
       else if (op.type === "delete_income")    await sb.from("income").delete().eq("id", op.data.id).eq("user_id", currentUser.id);
       else if (op.type === "update_user_data") await sb.from("user_data").upsert(op.data, { onConflict: "user_id" });
       else if (op.type === "reassign_cat")     await sb.from("expenses").update({ cat_id: op.data.to }).eq("user_id", currentUser.id).eq("cat_id", op.data.from);
+      else if (op.type === "upsert_debt")      await sb.from("debts").upsert(op.data, { onConflict: "id" });
+      else if (op.type === "delete_debt")      await sb.from("debts").delete().eq("id", op.data.id).eq("user_id", currentUser.id);
     } catch { failed.push(op); }
   }
   LS.set(PENDING_KEY, failed);
@@ -1271,9 +1454,54 @@ async function dbDeleteIncome(id) {
   } else { addPendingOp({ type: "delete_income", data: { id } }); }
 }
 
+async function dbUpsertDebt(d) {
+  if (!currentUser) return;
+  const row = { id: d.id, user_id: currentUser.id, dir: d.dir, person: d.person || "",
+    amount: d.amount, usd: d.usd ?? null, rate: d.rate, paid: d.paid || 0,
+    note: d.note || "", date: d.date, due: d.due ?? null, closed_at: d.closedAt ?? null };
+  if (isOnline) {
+    const { error } = await sb.from("debts").upsert(row, { onConflict: "id" });
+    if (error) addPendingOp({ type: "upsert_debt", data: row });
+  } else { addPendingOp({ type: "upsert_debt", data: row }); }
+}
+
+async function dbDeleteDebt(id) {
+  if (!currentUser) return;
+  if (isOnline) {
+    const { error } = await sb.from("debts").delete().eq("id", id).eq("user_id", currentUser.id);
+    if (error) addPendingOp({ type: "delete_debt", data: { id } });
+  } else { addPendingOp({ type: "delete_debt", data: { id } }); }
+}
+
+// Debts are not month-bound — fetched once per session, cache-first
+async function loadDebtsFromSupabase() {
+  if (!currentUser || !isOnline) return;
+  try {
+    const { data } = await withTimeout(sb.from("debts").select("*").eq("user_id", currentUser.id));
+    if (!data) return;
+    const mapped = data.map(r => {
+      const d = { id: r.id, dir: r.dir, person: r.person || "", amount: r.amount,
+        rate: r.rate, paid: r.paid || 0, note: r.note || "", date: r.date };
+      if (r.usd != null) d.usd = r.usd;
+      if (r.due) d.due = r.due;
+      if (r.closed_at) d.closedAt = r.closed_at;
+      return d;
+    });
+    if (JSON.stringify(mapped) !== JSON.stringify(debts)) {
+      debts = mapped;
+      LS.set(DK, debts);
+      render();
+    } else {
+      LS.set(DK, debts);
+    }
+  } catch {}
+}
+
 async function saveUserData() {
   if (!currentUser) return;
-  const row = { user_id: currentUser.id, categories: cats, settings: { lang, theme }, updated_at: new Date().toISOString() };
+  const row = { user_id: currentUser.id, categories: cats,
+    settings: { lang, theme, currency: { p: curPrimary, s: curSecondary } },
+    updated_at: new Date().toISOString() };
   if (isOnline) {
     const { error } = await sb.from("user_data").upsert(row, { onConflict: "user_id" });
     if (error) addPendingOp({ type: "update_user_data", data: row });
@@ -1316,8 +1544,20 @@ function initPreAuth() {
   theme = LS.get(TK) || "dark";
   document.documentElement.setAttribute("data-theme", theme);
   updateThemeColor(theme);
+  const cur = LS.get(CURK);
+  if (cur && CURRENCIES[cur.p]) {
+    curPrimary = cur.p;
+    curSecondary = (cur.s && CURRENCIES[cur.s] && cur.s !== cur.p) ? cur.s : null;
+  }
+  // Rate cache is only valid for the pair it was fetched for.
+  // Legacy cache (no pair field) implicitly means UZS/USD.
   const cached = LS.get(RK);
-  if (cached?.rate) { rate = cached.rate; rateTs = cached.ts; }
+  if (cached?.rate && hasSec() && (cached.pair ?? "UZS/USD") === pairKey()) {
+    rate = cached.rate; rateTs = cached.ts;
+  } else if (hasSec() && pairKey() !== "UZS/USD") {
+    rate = 0; // non-default pair with no cached rate — block secondary input until fetched
+  }
+  lastCatId = LS.get(LCK) || null;
   const now = new Date();
   curYear  = now.getFullYear();
   curMonth = now.getMonth() + 1;
@@ -1333,6 +1573,27 @@ function withTimeout(promise, ms = 6000) {
 
 // Called after auth confirmed — loads user data, boots app
 async function initUserData() {
+  // ── Account-switch guard ──
+  // If a DIFFERENT user signs in on this device (e.g. Google OAuth created
+  // or resolved to another user_id), the cached data and pending ops belong
+  // to the previous account — purge them so nothing leaks across accounts
+  // and stale ops are not replayed. Device prefs (lang/theme/currency) stay.
+  const prevUid = LS.get(UIDK);
+  if (prevUid && currentUser && prevUid !== currentUser.id) {
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("tracker_exp_") || k.startsWith("tracker_inc_")
+          || k === DK || k === CK || k === PENDING_KEY || k === LCK)
+        .forEach(k => localStorage.removeItem(k));
+      Object.keys(sessionStorage)
+        .filter(k => k.startsWith("tracker_fetched_"))
+        .forEach(k => sessionStorage.removeItem(k));
+    } catch {}
+    exps = {}; incs = {}; debts = []; cats = [];
+    lastCatId = null;
+  }
+  if (currentUser) LS.set(UIDK, currentUser.id);
+
   // Process any pending ops from offline session (non-fatal)
   try { await syncPending(); } catch(e) { console.warn("syncPending failed:", e); }
 
@@ -1340,6 +1601,7 @@ async function initUserData() {
   _loadCatsFromLS();
   if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
   LS.set(CK, cats);
+  debts = LS.get(DK) || [];
   ensureMonth();
   render();
   initSwipes();
@@ -1383,6 +1645,18 @@ async function initUserData() {
         } else if (hadLocalTheme && s.theme && s.theme !== theme) {
           needsSaveSettings = true;
         }
+        // Currency: same rule — explicit local choice wins, server is the fresh-device fallback
+        const hadLocalCur = !!LS.get(CURK);
+        const sc = s.currency;
+        if (!hadLocalCur && sc && CURRENCIES[sc.p]) {
+          curPrimary = sc.p;
+          curSecondary = (sc.s && CURRENCIES[sc.s] && sc.s !== sc.p) ? sc.s : null;
+          LS.set(CURK, { p: curPrimary, s: curSecondary });
+          rateTs = null;
+          changed = true;
+        } else if (hadLocalCur && JSON.stringify(sc ?? null) !== JSON.stringify({ p: curPrimary, s: curSecondary })) {
+          needsSaveSettings = true;
+        }
         if (needsSaveSettings) saveUserData();
         if (changed) render();
       } else {
@@ -1396,6 +1670,7 @@ async function initUserData() {
   }
 
   // ── Step 3: post-init ──
+  loadDebtsFromSupabase();
   fetchRateIfNeeded();
   checkPwaHint();
 }
@@ -1439,17 +1714,22 @@ async function migrateLocalData() {
 }
 
 async function fetchRateIfNeeded() {
+  if (!hasSec()) return; // single-currency mode — no rate needed
   if (rateTs && (Date.now()-rateTs) < 7*864e5) return;
   rateBusy = true; render();
+  const base = curSecondary, want = curPrimary;
+  // Sanity: keep the strict window for the legacy UZS/USD pair; generic pairs just need a positive finite number
+  const sane = n => n && isFinite(n) && n > 0 && (!(base === "USD" && want === "UZS") || (n > 10000 && n < 20000));
+  const norm = n => n >= 100 ? Math.round(n) : +(+n).toPrecision(6);
   for (const fn of [
-    () => fetch("https://open.er-api.com/v6/latest/USD").then(r=>r.json()).then(d=>d.rates?.UZS?Math.round(d.rates.UZS):null),
-    () => fetch("https://api.exchangerate-api.com/v4/latest/USD").then(r=>r.json()).then(d=>d.rates?.UZS?Math.round(d.rates.UZS):null),
+    () => fetch(`https://open.er-api.com/v6/latest/${base}`).then(r=>r.json()).then(d=>d.rates?.[want] ?? null),
+    () => fetch(`https://api.exchangerate-api.com/v4/latest/${base}`).then(r=>r.json()).then(d=>d.rates?.[want] ?? null),
   ]) {
     try {
       const n = await fn();
-      if (n > 10000 && n < 20000) {
-        rate = n; rateTs = Date.now();
-        LS.set(RK, {rate, ts:rateTs});
+      if (sane(n)) {
+        rate = norm(n); rateTs = Date.now();
+        LS.set(RK, {rate, ts:rateTs, pair: pairKey()});
         break;
       }
     } catch {}
@@ -1462,7 +1742,7 @@ async function fetchRateIfNeeded() {
  * ═══════════════════════════════════════════════════════════════════════ */
 function makeSummary(m, s) {
   const { expTotal, incTotal, bc, incList, expList, balance } = s;
-  const unit = t("sumUnit");
+  const unit = curSym();
   if (!expTotal && !incTotal) return t("sumNoData");
 
   let out = `📊 ${monthLabel(m).toUpperCase()}\n\n`;
@@ -1473,23 +1753,27 @@ function makeSummary(m, s) {
     out += `   ${t("sumNoIncome")}\n`;
   } else {
     incList.forEach((inc, i) => {
-      const usdPart = inc.usd != null ? `$${inc.usd}` : `~$${Math.round(inc.amount / (inc.rate || rate))}`;
-      const ratePart = inc.rate ? ` · 1$=${fmt(inc.rate)}` : "";
+      const entryRate = inc.rate > 0 ? inc.rate : rate;
+      const secPart  = inc.usd != null ? secSymStr(inc.usd) : ((hasSec() && entryRate > 0) ? `~${secSymStr(Math.round(inc.amount / entryRate))}` : "");
+      const ratePart = (inc.rate > 0 && (inc.usd != null || hasSec())) ? ` · 1 ${secCode()}=${fmtRate(inc.rate)}` : "";
       const notePart = inc.note ? ` · ${inc.note}` : "";
-      out += `${i+1}. ${fmt(inc.amount)} ${unit} (${usdPart})${ratePart}${notePart}\n`;
+      out += `${i+1}. ${fmt(inc.amount)} ${unit}${secPart ? ` (${secPart})` : ""}${ratePart}${notePart}\n`;
     });
-    out += `   ${"─".repeat(28)}\n   ${fmt(incTotal)} ${unit} (~$${incTotalUsd(incList)})\n`;
+    out += `   ${"─".repeat(28)}\n   ${fmt(incTotal)} ${unit}${canConvert() ? ` (~${secSymStr(incTotalUsd(incList))})` : ""}\n`;
   }
   out += `\n`;
 
   // Expense section
-  out += `${t("sumExpense")} ${fmt(expTotal)} ${unit} (~$${expTotalUsd(expList)})\n\n`;
+  out += `${t("sumExpense")} ${fmt(expTotal)} ${unit}${canConvert() ? ` (~${secSymStr(expTotalUsd(expList))})` : ""}\n\n`;
 
   // Balance
   const balPrefix = balance >= 0 ? "+" : "";
-  const balUsd = balanceUsd(incList, expList);
-  const balUsdStr = balUsd >= 0 ? `+$${balUsd}` : `-$${Math.abs(balUsd)}`;
-  out += `${t("sumBalance")} ${balPrefix}${fmt(balance)} ${unit} (${balUsdStr})\n\n`;
+  let balSecStr = "";
+  if (canConvert()) {
+    const balSec = balanceUsd(incList, expList);
+    balSecStr = ` (${balSec >= 0 ? "+" : "-"}${secSymStr(Math.abs(balSec))})`;
+  }
+  out += `${t("sumBalance")} ${balPrefix}${fmt(balance)} ${unit}${balSecStr}\n\n`;
 
   // Breakdown
   if (expTotal > 0) {
@@ -1507,10 +1791,44 @@ function makeSummary(m, s) {
 /* ═══════════════════════════════════════════════════════════════════════
  *  Render
  * ═══════════════════════════════════════════════════════════════════════ */
+// ── Form-state preservation ─────────────────────────────────────────
+// Background renders (rate fetch, silent Supabase re-render) rebuild the
+// DOM and would wipe whatever the user typed/selected in the add/edit
+// form. Capture field values before innerHTML swap, restore after.
+function _captureFormState() {
+  if (view !== "add") return null;
+  const g = id => document.getElementById(id);
+  if (!g("fa") && !g("fc")) return null;
+  return {
+    fa: g("fa")?.value ?? "",
+    fd: g("fd")?.value ?? "",
+    fn: g("fn")?.value ?? "",
+    fc: g("fc")?.value ?? null,
+    fp: g("fp")?.value ?? "",
+    fdd: g("fdd")?.value ?? "",
+    fpd: g("fpd")?.value ?? "",
+  };
+}
+function _restoreFormState(st) {
+  if (!st || view !== "add") return;
+  const g = id => document.getElementById(id);
+  if (st.fa && g("fa")) g("fa").value = st.fa;
+  if (st.fd && g("fd")) g("fd").value = st.fd;
+  if (st.fn && g("fn")) g("fn").value = st.fn;
+  const fc = g("fc");
+  if (st.fc != null && fc && [...fc.options].some(o => o.value === st.fc)) fc.value = st.fc;
+  if (st.fp && g("fp")) g("fp").value = st.fp;
+  if (st.fdd && g("fdd")) g("fdd").value = st.fdd;
+  if (st.fpd && g("fpd")) g("fpd").value = st.fpd;
+  // Refresh the USD→sum preview if an amount was restored
+  if (st.fa && g("fa")) g("fa").dispatchEvent(new Event("input"));
+}
+
 function render() {
   ensureMonth();
   const m = curM();
   const s = stats(m.id);
+  const _formKeep = _captureFormState();
   document.getElementById("app").innerHTML = `
 ${showMonthPicker ? `<div class="mpick-back" onclick="togglePicker()"></div>` : ""}
 <div class="mnav">
@@ -1523,20 +1841,20 @@ ${showMonthPicker ? rMonthPicker() : ""}
   <div class="row">
     <div style="flex:1;min-width:0">
       <div class="lbl">${t("expense")}</div>
-      <div class="big">${fmt(s.expTotal)} <span class="dim">${t("sumUnit")}</span></div>
-      <div class="sub">~$${expTotalUsd(s.expList)} · ${s.expList.length} ${recWord(s.expList.length)}</div>
+      <div class="big">${fmt(s.expTotal)} <span class="dim">${curSym()}</span></div>
+      <div class="sub">${canConvert() ? `~${secSymStr(expTotalUsd(s.expList))} · ` : ""}${s.expList.length} ${recWord(s.expList.length)}</div>
     </div>
     <div style="text-align:right;flex:1;min-width:0">
       <div class="lbl">${t("income")}</div>
-      <div class="big" style="color:var(--success)">${fmt(s.incTotal)} <span class="dim">${t("sumUnit")}</span></div>
-      <div class="sub">~$${incTotalUsd(s.incList)} · ${s.incList.length} ${recWord(s.incList.length)}</div>
+      <div class="big" style="color:var(--success)">${fmt(s.incTotal)} <span class="dim">${curSym()}</span></div>
+      <div class="sub">${canConvert() ? `~${secSymStr(incTotalUsd(s.incList))} · ` : ""}${s.incList.length} ${recWord(s.incList.length)}</div>
     </div>
   </div>
   ${(s.incTotal > 0 || s.expTotal > 0) ? `
     <div class="balance-bar">
       <span class="lbl">${t("balance")}</span>
       <div style="text-align:right">
-        <span class="balance-val ${s.balance >= 0 ? "pos" : "neg"}">${s.balance >= 0 ? "+" : ""}${fmt(s.balance)} ${t("sumUnit")}</span>
+        <span class="balance-val ${s.balance >= 0 ? "pos" : "neg"}">${s.balance >= 0 ? "+" : ""}${fmt(s.balance)} ${curSym()}</span>
       </div>
     </div>
   ` : ""}
@@ -1553,10 +1871,12 @@ ${showMonthPicker ? rMonthPicker() : ""}
 </div>
 ${view==="dash" ? rdash(s) : ""}
 ${view==="add"  ? radd(m)  : ""}
+${view==="debts" ? rdebts() : ""}
 ${view==="log"  ? rlog(s, m.id) : ""}
 ${view==="sum"  ? rsum(m, s) : ""}
 ${view==="set"  ? rset()   : ""}
 `;
+  _restoreFormState(_formKeep);
   const subEl = document.getElementById("subtitle-el");
   if (subEl) subEl.textContent = t("subtitle");
 }
@@ -1565,6 +1885,90 @@ function fmtShort(n) {
   if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,"") + "М";
   if (n >= 1000)    return Math.round(n/1000) + "К";
   return String(Math.round(n));
+}
+
+// ── Copy to next month ──────────────────────────────────────────────
+// Month ids use underscore: "2026_07"
+function nextMonthId(mId) {
+  let [y, m] = mId.split("_").map(Number);
+  m++; if (m > 12) { m = 1; y++; }
+  return `${y}_${String(m).padStart(2, "0")}`;
+}
+// Same day in the next month, clamped to its last day (Jan 31 → Feb 28/29)
+function nextMonthDate(dateStr) {
+  let [y, m, d] = dateStr.split("-").map(Number);
+  m++; if (m > 12) { m = 1; y++; }
+  const last = new Date(y, m, 0).getDate();
+  return `${y}-${String(m).padStart(2, "0")}-${String(Math.min(d, last)).padStart(2, "0")}`;
+}
+// Init month cache arrays WITHOUT triggering a server fetch (avoids a
+// fetch/upsert race right after copying)
+function ensureCacheOnly(id) {
+  if (exps[id] === undefined) { const c = LS.get(ek(id)); exps[id] = (c && Array.isArray(c)) ? c : []; }
+  if (incs[id] === undefined) { const c = LS.get(ik(id)); incs[id] = (c && Array.isArray(c)) ? c : []; }
+}
+
+function copyToNext(type, mId, id) {
+  const nid = nextMonthId(mId);
+  ensureCacheOnly(nid);
+  if (type === "inc") {
+    const src = (incs[mId] || []).find(e => e.id === id);
+    if (!src) return;
+    // A copy is a NEW income — lock the CURRENT rate, not the old one.
+    // If entered in secondary and no fresh rate is known, fall back to the
+    // original locked rate rather than producing a zero amount.
+    const useRate = rate > 0 ? rate : src.rate;
+    const entry = { id: "i" + Date.now() + Math.random().toString(36).slice(2,6),
+      amount: src.usd != null ? Math.round(src.usd * useRate) : src.amount,
+      rate: useRate, note: src.note || "", date: nextMonthDate(src.date) };
+    if (src.usd != null) entry.usd = src.usd;
+    incs[nid] = [...(incs[nid] || []), entry];
+    LS.set(ik(nid), incs[nid]);
+    dbUpsertIncome(entry, nid);
+  } else {
+    const src = (exps[mId] || []).find(e => e.id === id);
+    if (!src) return;
+    const useRate = rate > 0 ? rate : (src.usd != null && src.amount && src.usd ? src.amount / src.usd : rate);
+    const entry = { id: "e" + Date.now() + Math.random().toString(36).slice(2,6),
+      catId: catById(src.catId).id, // migrate if category was deleted
+      amount: src.usd != null ? Math.round(src.usd * useRate) : src.amount,
+      note: src.note || "", date: nextMonthDate(src.date) };
+    if (src.usd != null) entry.usd = src.usd;
+    exps[nid] = [...(exps[nid] || []), entry];
+    LS.set(ek(nid), exps[nid]);
+    dbUpsertExpense(entry, nid);
+  }
+  swipedItemId = null;
+  showToast(t("tCopiedNext"));
+  render();
+}
+
+// Journal search: matches note substring, category name, or amount digits
+function logMatch(e) {
+  const q = logSearchQ.trim().toLowerCase();
+  if (!q) return true;
+  if ((e.note || "").toLowerCase().includes(q)) return true;
+  if (e._type === "exp") {
+    const c = catById(e.catId);
+    if (c && catName(c).toLowerCase().includes(q)) return true;
+  } else {
+    if (t("incLabel").toLowerCase().includes(q)) return true;
+  }
+  const digits = q.replace(/[\s.,]/g, "");
+  if (digits && /^\d+$/.test(digits)) {
+    if (String(e.amount).includes(digits)) return true;
+    if (e.usd != null && String(e.usd).replace(".", "").includes(digits)) return true;
+  }
+  return false;
+}
+
+function setLogSearch(q) {
+  logSearchQ = q;
+  swipedItemId = null;
+  render();
+  // render() rebuilds the DOM — put the caret back so typing continues smoothly
+  const el = document.getElementById("logq");
+  if (el) { el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch {} }
 }
 
 function filterBycat(catId) {
@@ -1598,7 +2002,7 @@ function rDonut(sorted, bc, expTotal) {
   });
 
   const label = fmtShort(expTotal);
-  const unit = t("sumUnit");
+  const unit = curSym();
   return `<div class="donut-wrap"><svg viewBox="0 0 200 200" class="donut-svg" aria-hidden="true">
   <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--card-bg2)" stroke-width="${sw}"/>
   ${segs.join("")}
@@ -1609,9 +2013,10 @@ function rDonut(sorted, bc, expTotal) {
 
 function rdash(s) {
   const { bc, expTotal } = s;
+  const dCard = rDebtsCard();
   const sorted = cats.filter(c => bc[c.id] > 0).sort((a,b) => bc[b.id]-bc[a.id]);
-  if (!sorted.length && s.incList.length === 0) return `<div class="emp">${t("dashEmpty")}</div>`;
-  if (!sorted.length) return `<div class="emp" style="padding:2rem 1rem">— ${t("sumExpense").replace(":","")} —</div>`;
+  if (!sorted.length && s.incList.length === 0) return `<div class="emp">${t("dashEmpty")}</div>` + dCard;
+  if (!sorted.length) return `<div class="emp" style="padding:2rem 1rem">— ${t("sumExpense").replace(":","")} —</div>` + dCard;
   const mx = bc[sorted[0].id];
   return rDonut(sorted, bc, expTotal) + sorted.map(cat => {
     const sp = bc[cat.id], p = expTotal>0 ? Math.round(sp/expTotal*100) : 0;
@@ -1622,7 +2027,7 @@ function rdash(s) {
 </div>
 <div class="bar"><div class="bf" style="width:${Math.round(sp/mx*100)}%;background:${cat.c}"></div></div>
 </div>`;
-  }).join("");
+  }).join("") + dCard;
 }
 
 function radd(m) {
@@ -1641,6 +2046,14 @@ function radd(m) {
     }
     return rEditIncomeForm(inc);
   }
+  // Edit mode: debt
+  if (editingDebtId) {
+    const d = debtById(editingDebtId);
+    if (!d) { editingDebtId = null; editDebtDir = null; return radd(m); }
+    return rEditDebtForm(d);
+  }
+  // Add mode: debt
+  if (addType === "debt") return rAddDebtForm();
 
   const isInc = addType === "inc";
   const effectiveCat = lastCatId && catById(lastCatId) ? lastCatId : (cats[0]?.id || "other");
@@ -1650,22 +2063,16 @@ function radd(m) {
 <p class="ctx">${t("addingTo")} ${monthLabel(m)}</p>
 
 ${!isInc ? `
-<div class="fg"><label class="fl">${t("formCat")}</label><select id="fc">${catOpts}</select></div>
+<div class="fg"><label class="fl">${t("formCat")}</label><select id="fc" onchange="setLastCat(this.value)">${catOpts}</select></div>
 ` : ""}
 
-<div class="fg">
-  <label class="fl">${t("formCur")}</label>
-  <div class="cur-row">
-    <button type="button" class="cb ${curSel==="uzs"?"on":""}" id="buz" onclick="setCur('uzs')">🇺🇿 UZS</button>
-    <button type="button" class="cb ${curSel==="usd"?"on":""}" id="bud" onclick="setCur('usd')">🇺🇸 USD</button>
-  </div>
-</div>
+${curRowHTML()}
 
 <div class="fg">
   <label class="fl">${t("formAmt")}</label>
-  <input type="number" id="fa" placeholder="${curSel==="usd"?t("phUsd"):t("phUzs")}" oninput="uprev()"/>
-  <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}">${t("enterUsd")}</div>
-  ${isInc ? `<div class="rate-hint">${t("rateCurrent")} <strong>1$ = ${fmt(rate)} ${t("sumUnit")}</strong> · ${t("rateWillLock")}</div>` : ""}
+  <input type="number" id="fa" placeholder="${phAmt(curSel==="sec" ? secCode() : curPrimary)}" oninput="uprev()"/>
+  <div class="prev" id="pv" style="display:${curSel==="sec"?"block":"none"}">${enterSecTxt()}</div>
+  ${isInc && hasSec() && rate > 0 ? `<div class="rate-hint">${t("rateCurrent")} <strong>1 ${secCode()} = ${fmtRate(rate)} ${curSym()}</strong> · ${t("rateWillLock")}</div>` : ""}
 </div>
 
 <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${tod()}"/></div>
@@ -1685,20 +2092,14 @@ function rEditIncomeForm(inc) {
   return `
 <div class="edit-box">
   <div class="edit-h">${t("editingIncome")}</div>
-  <div class="rate-locked">${t("rateLocked")} 1$ = ${fmt(inc.rate)} ${t("sumUnit")}</div>
+  ${(inc.usd != null || hasSec()) ? `<div class="rate-locked">${t("rateLocked")} 1 ${secCode()} = ${fmtRate(inc.rate)} ${curSym()}</div>` : ""}
 
-  <div class="fg" style="margin-top:14px">
-    <label class="fl">${t("formCur")}</label>
-    <div class="cur-row">
-      <button type="button" class="cb ${curSel==="uzs"?"on":""}" id="buz" onclick="setCur('uzs')">🇺🇿 UZS</button>
-      <button type="button" class="cb ${curSel==="usd"?"on":""}" id="bud" onclick="setCur('usd')">🇺🇸 USD</button>
-    </div>
-  </div>
+  ${curRowHTML("margin-top:14px")}
 
   <div class="fg">
     <label class="fl">${t("formAmt")}</label>
     <input type="number" id="fa" value="${amountToShow}" oninput="uprevEdit(${inc.rate})"/>
-    <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}"></div>
+    <div class="prev" id="pv" style="display:${curSel==="sec"?"block":"none"}"></div>
   </div>
 
   <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${inc.date}"/></div>
@@ -1730,18 +2131,12 @@ function rEditExpForm(exp) {
     <select id="fc">${catOpts}</select>
   </div>
 
-  <div class="fg">
-    <label class="fl">${t("formCur")}</label>
-    <div class="cur-row">
-      <button type="button" class="cb ${curSel==="uzs"?"on":""}" onclick="setCur('uzs')">🇺🇿 UZS</button>
-      <button type="button" class="cb ${curSel==="usd"?"on":""}" onclick="setCur('usd')">🇺🇸 USD</button>
-    </div>
-  </div>
+  ${curRowHTML()}
 
   <div class="fg">
     <label class="fl">${t("formAmt")}</label>
     <input type="number" id="fa" value="${amountToShow}" oninput="uprev()"/>
-    <div class="prev" id="pv" style="display:${curSel==="usd"?"block":"none"}"></div>
+    <div class="prev" id="pv" style="display:${curSel==="sec"?"block":"none"}"></div>
   </div>
 
   <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${exp.date}"/></div>
@@ -1765,7 +2160,7 @@ function startEditExp(mid, id) {
   if (!exp) return;
   editingExpId = id;
   editingExpMonth = mid;
-  curSel = exp.usd != null ? "usd" : "uzs";
+  curSel = exp.usd != null ? "sec" : "pri";
   view = "add";
   render();
 }
@@ -1789,7 +2184,7 @@ function doSaveEditExp() {
 
   if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
 
-  if (curSel === "usd") {
+  if (curSel === "sec") {
     exp.usd = inp;
     exp.amount = Math.round(inp * rate);
   } else {
@@ -1815,6 +2210,8 @@ function rlog(s, mid) {
     ...s.expList.map(e => ({...e, _type:"exp"})),
   ];
 
+  const hadEntries = all.length > 0;
+
   // Active filter chip
   let filterChip = "";
   if (logFilterCat) {
@@ -1828,12 +2225,22 @@ function rlog(s, mid) {
     } else { logFilterCat = null; }
   }
 
-  if (!all.length) return filterChip + `<div class="emp">${t("logEmpty")}</div>`;
+  // Search box (always visible when the month has entries)
+  const searchBox = hadEntries ? `<div class="log-search">
+  <input type="text" id="logq" placeholder="${t("logSearchPh")}" value="${escHTML(logSearchQ)}"
+         oninput="setLogSearch(this.value)"/>
+  ${logSearchQ ? `<button class="logq-x" onclick="setLogSearch('')" aria-label="clear search">✕</button>` : ""}
+</div>` : "";
+
+  if (logSearchQ) all = all.filter(logMatch);
+
+  if (!all.length) return searchBox + filterChip +
+    `<div class="emp">${hadEntries ? t("logNoMatches") : t("logEmpty")}</div>`;
   all.sort((a,b) => {
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
     return a.id < b.id ? 1 : -1;
   });
-  return filterChip + all.map(e => {
+  return searchBox + filterChip + all.map(e => {
     const tx = swipedItemId === e.id ? -80 : 0;
     const ts = `transform:translateX(${tx}px)`;
     if (e._type === "inc") {
@@ -1842,13 +2249,14 @@ function rlog(s, mid) {
     <div class="av">💰</div>
     <div style="flex:1;min-width:0">
       <div class="ln">${t("incLabel")}${e.note?" · "+escHTML(e.note):""}</div>
-      <div class="lm">${e.date} · 🔒 1$=${fmt(e.rate)}</div>
+      <div class="lm">${e.date}${(e.rate > 0 && (e.usd != null || hasSec())) ? ` · 🔒 1 ${secCode()}=${fmtRate(e.rate)}` : ""}</div>
     </div>
     <div style="text-align:right;flex-shrink:0;padding-right:10px">
       <div class="la inc-amt">+${fmt(e.amount)}</div>
-      ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
+      ${e.usd!=null?`<div class="lu">(${secSymStr(e.usd)})</div>`:""}
       <div class="actions">
         <button class="ab edit" onclick="startEditIncome('${mid}','${e.id}')">${t("edit")}</button>
+        <button class="ab" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('inc','${mid}','${e.id}')">📋→</button>
       </div>
     </div>
   </div>
@@ -1865,9 +2273,10 @@ function rlog(s, mid) {
     </div>
     <div style="text-align:right;flex-shrink:0;padding-right:10px">
       <div class="la">${fmt(e.amount)}</div>
-      ${e.usd!=null?`<div class="lu">($${e.usd})</div>`:""}
+      ${e.usd!=null?`<div class="lu">(${secSymStr(e.usd)})</div>`:""}
       <div class="actions">
         <button class="ab edit" onclick="startEditExp('${mid}','${e.id}')">${t("edit")}</button>
+        <button class="ab" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('exp','${mid}','${e.id}')">📋→</button>
       </div>
     </div>
   </div>
@@ -1877,6 +2286,290 @@ function rlog(s, mid) {
   }).join("");
 }
 
+/* ═══════════════════════════════════════════════════════════════════════
+ *  Debts (🤝) — separate entity, not month-bound, excluded from stats
+ * ═══════════════════════════════════════════════════════════════════════ */
+function openDebts()   { return debts.filter(d => !d.closedAt); }
+function closedDebts() { return debts.filter(d => !!d.closedAt); }
+function debtById(id)  { return debts.find(d => d.id === id); }
+
+// Compact summary card on the dashboard → opens debts view
+function rDebtsCard() {
+  const open = openDebts();
+  const owedMe = open.filter(d => d.dir === "owed_me").reduce((a,d) => a + (d.amount - d.paid), 0);
+  const iOwe   = open.filter(d => d.dir === "i_owe").reduce((a,d) => a + (d.amount - d.paid), 0);
+  return `
+<div class="card debts-card" onclick="sv('debts')" role="button">
+  <div class="debts-head"><span class="lbl">${t("debtsTitle")}</span><span class="debts-arrow">→</span></div>
+  ${open.length ? `
+  <div class="debts-row">
+    <div><div class="dlbl">${t("debtOwedMe")}</div><div class="dval dval-pos">${fmt(owedMe)} <span class="dim">${curSym()}</span></div></div>
+    <div style="text-align:right"><div class="dlbl">${t("debtIOwe")}</div><div class="dval dval-neg">${fmt(iOwe)} <span class="dim">${curSym()}</span></div></div>
+  </div>` : `<div class="debts-none">${t("debtNoActive")}</div>`}
+</div>`;
+}
+
+function rdebts() {
+  const open   = openDebts().sort((a,b) => (a.due||"9999").localeCompare(b.due||"9999") || (a.date<b.date?1:-1));
+  const closed = closedDebts().sort((a,b) => (a.closedAt<b.closedAt?1:-1));
+  const owedMe = open.filter(d => d.dir === "owed_me");
+  const iOwe   = open.filter(d => d.dir === "i_owe");
+  const sec = (list, title) => !list.length ? "" : `
+<div class="debt-sec">
+  <div class="debt-sec-h">${title}</div>
+  ${list.map(rDebtItem).join("")}
+</div>`;
+  return `
+<button class="abtn" style="margin-bottom:14px" onclick="startAddDebt()">➕ ${t("addDebtBtn")}</button>
+${!open.length && !closed.length ? `<div class="emp">${t("debtEmpty")}</div>` : ""}
+${sec(owedMe, "🟢 " + t("debtOwedMe"))}
+${sec(iOwe,   "🔴 " + t("debtIOwe"))}
+${closed.length ? `
+<div class="debt-sec">
+  <button class="debt-hist-toggle" onclick="toggleClosedDebts()">${showClosedDebts ? "▾" : "▸"} ${t("debtHistory")} (${closed.length})</button>
+  ${showClosedDebts ? closed.map(rDebtItemClosed).join("") : ""}
+</div>` : ""}
+`;
+}
+
+function rDebtItem(d) {
+  const remaining = d.amount - d.paid;
+  const pct = d.amount > 0 ? Math.min(100, Math.round(d.paid / d.amount * 100)) : 0;
+  const overdue = d.due && d.due < tod();
+  const color = d.dir === "owed_me" ? "var(--success)" : "var(--danger)";
+  return `
+<div class="dli">
+  <div class="dli-top">
+    <span class="dli-person">${escHTML(d.person)}</span>
+    <span class="dli-amt" style="color:${color}">${fmt(remaining)} <span class="dim">${curSym()}</span></span>
+  </div>
+  <div class="dli-meta">${d.date}${d.due ? ` · ${overdue ? `<span class="dli-overdue">${t("debtOverdue")}</span> ` : "→ "}${d.due}` : ""}${d.usd != null ? ` · ${secSymStr(d.usd)} 🔒1 ${secCode()}=${fmtRate(d.rate)}` : ""}${d.note ? ` · ${escHTML(d.note)}` : ""}</div>
+  ${d.paid > 0 ? `<div class="bar" style="margin:7px 0 3px"><div class="bf" style="width:${pct}%;background:${color}"></div></div>
+  <div class="dli-paid">${t("debtPaidLbl")}: ${fmt(d.paid)} ${t("debtOf")} ${fmt(d.amount)}</div>` : ""}
+  ${repayingDebtId === d.id ? `
+  <div class="repay-row">
+    <input type="number" id="rp_amt" placeholder="${t("debtRepayPh")}" value="${remaining}" onkeydown="if(event.key==='Enter')doRepay('${d.id}')"/>
+    <button class="rp-btn ok" onclick="doRepay('${d.id}')">✓</button>
+    <button class="rp-btn" onclick="toggleRepay(null)">✕</button>
+  </div>` : `
+  <div class="dli-btns">
+    <button class="dli-btn" onclick="toggleRepay('${d.id}')">${t("debtRepay")}</button>
+    <button class="dli-btn" onclick="startEditDebt('${d.id}')">✏️</button>
+  </div>`}
+</div>`;
+}
+
+function rDebtItemClosed(d) {
+  const emoji = d.dir === "owed_me" ? "🟢" : "🔴";
+  return `
+<div class="dli closed">
+  <div class="dli-top">
+    <span class="dli-person">${emoji} ${escHTML(d.person)}</span>
+    <span class="dli-amt dim">${fmt(d.amount)} <span class="dim">${curSym()}</span></span>
+  </div>
+  <div class="dli-meta">✓ ${t("debtClosedOn")} ${String(d.closedAt).slice(0,10)}${d.note ? ` · ${escHTML(d.note)}` : ""}</div>
+  <div class="dli-btns"><button class="dli-btn" onclick="startEditDebt('${d.id}')">✏️</button></div>
+</div>`;
+}
+
+// ── Debt actions ────────────────────────────────────────────────────
+function startAddDebt() {
+  addType = "debt";
+  debtDir = "owed_me";
+  editingExpId = null; editingExpMonth = null;
+  editingIncomeId = null; editingIncomeMonth = null;
+  sv("add");
+  setTimeout(() => document.getElementById("fp")?.focus(), 80);
+}
+
+function setDebtDir(dir) {
+  if (dir !== "owed_me" && dir !== "i_owe") return;
+  debtDir = dir;
+  render();
+}
+
+function setEditDebtDir(dir) {
+  if (dir !== "owed_me" && dir !== "i_owe") return;
+  editDebtDir = dir;
+  render();
+}
+
+function doAddDebt() {
+  const person = (document.getElementById("fp")?.value || "").trim();
+  if (!person) { showToast(t("tEnterPerson"), true); return; }
+  const raw = (document.getElementById("fa")?.value || "").trim();
+  const inp = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
+  if (curSel === "sec" && !(rate > 0)) { showToast(t("tNoRate"), true); return; }
+  const note = (document.getElementById("fn")?.value || "").trim();
+  const date = document.getElementById("fd")?.value || tod();
+  const due  = document.getElementById("fdd")?.value || null;
+  const usd = curSel === "sec" ? inp : undefined;
+  const amount = curSel === "sec" ? Math.round(inp*rate) : Math.round(inp);
+  const entry = { id: "d" + Date.now() + Math.random().toString(36).slice(2,6),
+    dir: debtDir, person, amount, rate, paid: 0, note, date };
+  if (usd !== undefined) entry.usd = usd;
+  if (due) entry.due = due;
+  debts = [...debts, entry];
+  LS.set(DK, debts);
+  dbUpsertDebt(entry);
+  showToast(t("tDebtSaved"));
+  sv("debts");
+}
+
+function toggleRepay(id) {
+  repayingDebtId = id;
+  render();
+  if (id) setTimeout(() => document.getElementById("rp_amt")?.select(), 60);
+}
+
+function doRepay(id) {
+  const d = debtById(id);
+  if (!d) return;
+  const raw = (document.getElementById("rp_amt")?.value || "").trim();
+  const v = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  if (!v || v <= 0 || isNaN(v)) { showToast(t("tEnterAmt"), true); return; }
+  d.paid = Math.min(d.amount, Math.round(d.paid + v));
+  if (d.paid >= d.amount) {
+    d.closedAt = new Date().toISOString();
+    showToast(t("tDebtClosed"));
+  } else {
+    showToast(t("tRepaySaved"));
+  }
+  repayingDebtId = null;
+  LS.set(DK, debts);
+  dbUpsertDebt(d);
+  render();
+}
+
+function toggleClosedDebts() { showClosedDebts = !showClosedDebts; render(); }
+
+function startEditDebt(id) {
+  const d = debtById(id);
+  if (!d) return;
+  editingDebtId = id;
+  editDebtDir = d.dir;
+  repayingDebtId = null;
+  curSel = d.usd != null ? "sec" : "pri";
+  addType = "debt";
+  view = "add";
+  render();
+}
+
+function cancelEditDebt() {
+  editingDebtId = null; editDebtDir = null;
+  sv("debts");
+}
+
+function doSaveEditDebt() {
+  const d = debtById(editingDebtId);
+  if (!d) { cancelEditDebt(); return; }
+  const person = (document.getElementById("fp")?.value || "").trim();
+  if (!person) { showToast(t("tEnterPerson"), true); return; }
+  const raw = (document.getElementById("fa")?.value || "").trim();
+  const inp = parseFloat(raw.replace(/\s/g,"").replace(",","."));
+  if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
+  const inUsd = d.usd != null;
+  // Rate is locked at creation (like income) — never recalculated on edit
+  if (inUsd) { d.usd = inp; d.amount = Math.round(inp * d.rate); }
+  else       { d.amount = Math.round(inp); }
+  const paidRaw = (document.getElementById("fpd")?.value || "0").trim();
+  const paid = parseFloat(paidRaw.replace(/\s/g,"").replace(",","."));
+  d.paid = Math.max(0, Math.min(d.amount, Math.round(isNaN(paid) ? 0 : paid)));
+  d.dir = editDebtDir || d.dir;
+  d.person = person;
+  d.note = (document.getElementById("fn")?.value || "").trim();
+  d.date = document.getElementById("fd")?.value || d.date;
+  const due = document.getElementById("fdd")?.value || null;
+  if (due) d.due = due; else delete d.due;
+  // Fully repaid → closed (keep original close date); otherwise reopen
+  if (d.paid >= d.amount) { if (!d.closedAt) d.closedAt = new Date().toISOString(); }
+  else delete d.closedAt;
+  editingDebtId = null; editDebtDir = null;
+  LS.set(DK, debts);
+  dbUpsertDebt(d);
+  showToast(t("tDebtSaved"));
+  sv("debts");
+}
+
+function doDelDebt(id) {
+  showConfirm(t("deleteConfirm"), () => {
+    debts = debts.filter(d => d.id !== id);
+    LS.set(DK, debts);
+    dbDeleteDebt(id);
+    showToast(t("tDeleted"));
+    if (view !== "debts") sv("debts"); else render();
+  });
+}
+
+// ── Debt forms ──────────────────────────────────────────────────────
+function rAddDebtForm() {
+  return `
+<p class="ctx">${t("debtsTitle")}</p>
+
+<div class="fg">
+  <label class="fl">${t("debtDirLbl")}</label>
+  <div class="cur-row">
+    <button type="button" class="cb ${debtDir==="owed_me"?"on":""}" onclick="setDebtDir('owed_me')">🟢 ${t("debtOwedMe")}</button>
+    <button type="button" class="cb ${debtDir==="i_owe"?"on":""}" onclick="setDebtDir('i_owe')">🔴 ${t("debtIOwe")}</button>
+  </div>
+</div>
+
+<div class="fg"><label class="fl">${t("debtPerson")}</label><input type="text" id="fp" placeholder="${escHTML(t("debtPersonPh"))}"/></div>
+
+${curRowHTML()}
+
+<div class="fg">
+  <label class="fl">${t("formAmt")}</label>
+  <input type="number" id="fa" placeholder="${phAmt(curSel==="sec" ? secCode() : curPrimary)}" oninput="uprev()"/>
+  <div class="prev" id="pv" style="display:${curSel==="sec"?"block":"none"}">${enterSecTxt()}</div>
+</div>
+
+<div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${tod()}"/></div>
+<div class="fg"><label class="fl">${t("debtDue")}</label><input type="date" id="fdd"/></div>
+
+<div class="fg">
+  <label class="fl">${t("formNote")}</label>
+  <input type="text" id="fn" onkeydown="if(event.key==='Enter')doAddDebt()"/>
+</div>
+
+<button class="abtn" onclick="doAddDebt()">➕ ${t("addDebtBtn")}</button>
+`;
+}
+
+function rEditDebtForm(d) {
+  const inUsd = d.usd != null;
+  const amountToShow = inUsd ? d.usd : d.amount;
+  const dir = editDebtDir || d.dir;
+  return `
+<div class="edit-box">
+  <div class="edit-h">${t("editingDebt")}</div>
+  ${inUsd ? `<div class="rate-locked">${t("rateLocked")} 1 ${secCode()} = ${fmtRate(d.rate)} ${curSym()}</div>` : ""}
+
+  <div class="fg" style="margin-top:14px">
+    <label class="fl">${t("debtDirLbl")}</label>
+    <div class="cur-row">
+      <button type="button" class="cb ${dir==="owed_me"?"on":""}" onclick="setEditDebtDir('owed_me')">🟢 ${t("debtOwedMe")}</button>
+      <button type="button" class="cb ${dir==="i_owe"?"on":""}" onclick="setEditDebtDir('i_owe')">🔴 ${t("debtIOwe")}</button>
+    </div>
+  </div>
+
+  <div class="fg"><label class="fl">${t("debtPerson")}</label><input type="text" id="fp" value="${escHTML(d.person)}"/></div>
+  <div class="fg"><label class="fl">${t("formAmt")}${inUsd ? " ($)" : ""}</label><input type="number" id="fa" value="${amountToShow}"/></div>
+  <div class="fg"><label class="fl">${t("debtPaidLbl")} (${curSym()})</label><input type="number" id="fpd" value="${d.paid || 0}"/></div>
+  <div class="fg"><label class="fl">${t("formDate")}</label><input type="date" id="fd" value="${d.date}"/></div>
+  <div class="fg"><label class="fl">${t("debtDue")}</label><input type="date" id="fdd" value="${d.due || ""}"/></div>
+  <div class="fg"><label class="fl">${t("formNote")}</label><input type="text" id="fn" value="${escHTML(d.note || "")}"/></div>
+
+  <div class="btn-row">
+    <button class="abtn sec" onclick="cancelEditDebt()">${t("cancelBtn")}</button>
+    <button class="abtn" onclick="doSaveEditDebt()">${t("saveChangesBtn")}</button>
+  </div>
+  <button class="btn-danger" onclick="(()=>{const i=editingDebtId;cancelEditDebt();doDelDebt(i);})()">🗑️ ${t("delete")}</button>
+</div>
+`;
+}
+
 function rsum(m, s) {
   if (!s.expTotal && !s.incTotal) {
     return `<div class="emp">${t("sumNoData")}</div>`;
@@ -1884,7 +2577,55 @@ function rsum(m, s) {
   return `<div class="sbox">
 <pre class="spre">${escHTML(makeSummary(m, s))}</pre>
 <button class="cpb" onclick="doCopy()">${t("copyBtn")}</button>
+<button class="cpb" style="margin-top:8px" onclick="doExportCsv()">${t("csvBtn")}</button>
 </div>`;
+}
+
+// ── CSV export (current month) ──────────────────────────────────────
+function csvEsc(v) {
+  let x = String(v ?? "");
+  if (/^[=+\-@\t\r]/.test(x)) x = "'" + x;          // formula-injection guard
+  if (/[",;\n\r]/.test(x)) x = '"' + x.replace(/"/g, '""') + '"';
+  return x;
+}
+
+function buildCsv(s) {
+  const rows = [[t("csvDate"), t("csvType"), t("csvCat"), t("csvAmount"), t("csvCur"),
+                 t("csvSecAmount"), t("csvRate"), t("csvNote")]];
+  const all = [
+    ...s.expList.map(e => ({...e, _type:"exp"})),
+    ...s.incList.map(e => ({...e, _type:"inc"})),
+  ].sort((a,b) => a.date === b.date ? (a.id < b.id ? -1 : 1) : (a.date < b.date ? -1 : 1));
+  for (const e of all) {
+    const cat = e._type === "exp" ? catName(catById(e.catId)) : "";
+    rows.push([
+      e.date,
+      e._type === "exp" ? t("expense") : t("income"),
+      cat,
+      e.amount,
+      curPrimary,
+      e.usd != null ? e.usd : "",
+      (e._type === "inc" && e.rate > 0) ? e.rate : "",
+      e.note || "",
+    ]);
+  }
+  return rows.map(r => r.map(csvEsc).join(",")).join("\r\n");
+}
+
+function doExportCsv() {
+  const s = stats(mid());
+  const csv = "\uFEFF" + buildCsv(s); // BOM — Excel-friendly cyrillic
+  try {
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `wtfimm_${mid()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (e) { console.error("csv export:", e); }
 }
 
 function rset() {
@@ -1893,6 +2634,19 @@ function rset() {
 <div class="sec">
   <div class="sec-h">${t("setAccount")}</div>
   <div class="auth-email-badge">📧 ${email}</div>
+</div>
+
+<div class="sec">
+  <div class="sec-h">${t("setCurrency")}</div>
+  <div class="set-sub">${t("curPrimaryLbl")}</div>
+  <div class="opt-row">
+    ${Object.keys(CURRENCIES).map(c => `<button class="opt-btn ${curPrimary===c?"on":""}" onclick="setPrimaryCur('${c}')">${CURRENCIES[c].flag} ${c}</button>`).join("")}
+  </div>
+  <div class="set-sub" style="margin-top:12px">${t("curSecondaryLbl")}</div>
+  <div class="opt-row">
+    <button class="opt-btn ${!curSecondary?"on":""}" onclick="setSecondaryCur('none')">🚫 ${t("curNone")}</button>
+    ${Object.keys(CURRENCIES).filter(c => c !== curPrimary).map(c => `<button class="opt-btn ${curSecondary===c?"on":""}" onclick="setSecondaryCur('${c}')">${CURRENCIES[c].flag} ${c}</button>`).join("")}
+  </div>
 </div>
 
 <div class="sec">
@@ -1934,7 +2688,10 @@ function rset() {
 
 <div class="sec">
   <div class="sec-h">${t("setAccount")}</div>
-  <button class="btn-secondary" id="btn-reset-pass" onclick="doResetPassword()">🔑 ${t("resetPassword")}</button>
+  ${currentUser?.identities?.some(i => i.provider === "google")
+    ? `<div class="auth-email-badge">🔗 ${t("googleLinked")}</div>`
+    : `<button class="btn-secondary" onclick="linkGoogleAccount()">🔗 ${t("linkGoogle")}</button>`}
+  <button class="btn-secondary" id="btn-reset-pass" style="margin-top:8px" onclick="doResetPassword()">🔑 ${t("resetPassword")}</button>
   <button class="abtn exp" style="margin-top:8px" onclick="doSignOut()">🚪 ${t("signOut")}</button>
   <div class="danger-zone" style="margin-top:12px">
     <button class="btn-danger" id="btn-del-acc" onclick="doDeleteAccount()">💀 ${t("deleteAccount")}</button>
@@ -2037,15 +2794,17 @@ function nav(d) {
 }
 
 function sv(v) {
+  if (view === "log" && v !== "log") logSearchQ = ""; // leaving journal resets search
   view = v;
   showMonthPicker = false;
   swipedItemId = null;
   editingCatId = null; newCatMode = false;
   editingIncomeId = null; editingIncomeMonth = null;
   editingExpId = null; editingExpMonth = null;
+  editingDebtId = null; editDebtDir = null; repayingDebtId = null;
   if (v === "add") {
     currentNotePh = pickNotePh();
-    curSel = "uzs";
+    curSel = "pri";
   }
   setLogoAnimForView(v);
   render();
@@ -2063,6 +2822,36 @@ function setLogoAnimForView(v) {
   if (VIEW_ANIM_MAP[v] === undefined) return;
   logoAnimIdx = VIEW_ANIM_MAP[v];
   applyLogoAnim(el);
+}
+
+// ── Currency settings actions ───────────────────────────────────────
+function setPrimaryCur(code) {
+  if (!CURRENCIES[code] || code === curPrimary) return;
+  showConfirm(t("curChangeWarn"), () => {
+    const oldP = curPrimary;
+    curPrimary = code;
+    if (curSecondary === code) curSecondary = oldP; // natural UZS↔USD swap
+    _applyCurChange();
+  }, "💱", t("changeBtn"));
+}
+
+function setSecondaryCur(code) {
+  const next = code === "none" ? null : code;
+  if (next === curSecondary) return;
+  if (next && (!CURRENCIES[next] || next === curPrimary)) return;
+  curSecondary = next;
+  _applyCurChange();
+}
+
+function _applyCurChange() {
+  curSel = "pri";
+  rate = 0; rateTs = null;         // old rate belongs to the old pair
+  LS.set(RK, null);                // invalidate rate cache
+  LS.set(CURK, { p: curPrimary, s: curSecondary });
+  saveUserData();
+  showToast(t("tCurSaved"));
+  render();
+  fetchRateIfNeeded();             // fetch for the new pair (no-op if no pair)
 }
 
 function setLang(l) {
@@ -2095,7 +2884,7 @@ function updateThemeColor(th) {
 
 function quickAdd(type) {
   addType = (type === "inc") ? "inc" : "exp";
-  curSel = "uzs";
+  curSel = "pri";
   editingExpId = null; editingExpMonth = null;
   editingIncomeId = null; editingIncomeMonth = null;
   sv("add"); // triggers logo wave animation + render
@@ -2106,38 +2895,46 @@ function quickAdd(type) {
 function setAddType(type) {
   if (type !== "exp" && type !== "inc") return;
   addType = type;
-  curSel = "uzs";
+  curSel = "pri";
   render();
 }
 
 function setCur(c) {
+  if (c !== "pri" && c !== "sec") return;
+  if (c === "sec" && !hasSec()) return;
   curSel = c;
-  document.getElementById("buz")?.classList.toggle("on", c==="uzs");
-  document.getElementById("bud")?.classList.toggle("on", c==="usd");
+  document.getElementById("buz")?.classList.toggle("on", c==="pri");
+  document.getElementById("bud")?.classList.toggle("on", c==="sec");
   const fa = document.getElementById("fa");
-  if (fa) { fa.value=""; fa.placeholder = c==="usd" ? t("phUsd") : t("phUzs"); }
+  if (fa) { fa.value=""; fa.placeholder = phAmt(c==="sec" ? secCode() : curPrimary); }
   const pv = document.getElementById("pv");
-  if (pv) { pv.style.display = c==="usd"?"block":"none"; pv.textContent = t("enterUsd"); }
+  if (pv) { pv.style.display = c==="sec"?"block":"none"; pv.textContent = enterSecTxt(); }
 }
 
 function uprev() {
   const pv = document.getElementById("pv");
-  if (!pv || curSel !== "usd") return;
+  if (!pv || curSel !== "sec") return;
   const v = parseFloat(document.getElementById("fa")?.value || "0");
-  pv.textContent = v > 0 ? `≈ ${fmt(v*rate)} ${t("sumUnit")} (1$=${fmt(rate)})` : t("enterUsd");
+  pv.textContent = (v > 0 && rate > 0) ? `≈ ${fmt(v*rate)} ${curSym()} (1 ${secCode()}=${fmtRate(rate)})` : enterSecTxt();
 }
 
 function uprevEdit(lockedRate) {
   const pv = document.getElementById("pv");
-  if (!pv) return;
+  if (!pv || !(lockedRate > 0)) return;
   const v = parseFloat(document.getElementById("fa")?.value || "0");
-  if (curSel === "usd") {
+  if (curSel === "sec") {
     pv.style.display = "block";
-    pv.textContent = v > 0 ? `≈ ${fmt(v*lockedRate)} ${t("sumUnit")} (🔒 1$=${fmt(lockedRate)})` : t("enterUsd");
+    pv.textContent = v > 0 ? `≈ ${fmt(v*lockedRate)} ${curSym()} (🔒 1 ${secCode()}=${fmtRate(lockedRate)})` : enterSecTxt();
   } else {
     pv.style.display = v > 0 ? "block" : "none";
-    pv.textContent = v > 0 ? `≈ $${(v/lockedRate).toFixed(2)} (🔒 1$=${fmt(lockedRate)})` : "";
+    pv.textContent = v > 0 ? `≈ ${secSymStr((v/lockedRate).toFixed(2))} (🔒 1 ${secCode()}=${fmtRate(lockedRate)})` : "";
   }
+}
+
+// Remember last selected expense category (survives re-renders and reloads)
+function setLastCat(id) {
+  lastCatId = id;
+  LS.set(LCK, id);
 }
 
 function doAdd() {
@@ -2148,10 +2945,11 @@ function doAdd() {
 
   if (!inp || inp <= 0 || isNaN(inp)) { showToast(t("tEnterAmt"), true); return; }
 
+  if (curSel === "sec" && !(rate > 0)) { showToast(t("tNoRate"), true); return; }
   const m = curM();
   const isInc = addType === "inc";
-  const usd = curSel === "usd" ? inp : undefined;
-  const amount = curSel === "usd" ? Math.round(inp*rate) : Math.round(inp);
+  const usd = curSel === "sec" ? inp : undefined;
+  const amount = curSel === "sec" ? Math.round(inp*rate) : Math.round(inp);
   const id = (isInc ? "i" : "e") + Date.now() + Math.random().toString(36).slice(2,6);
 
   if (isInc) {
@@ -2164,7 +2962,7 @@ function doAdd() {
   } else {
     const catId = document.getElementById("fc")?.value || "other";
     if (!catById(catId)) { showToast("Invalid category", true); return; }
-    lastCatId = catId; // remember for next add
+    setLastCat(catId); // remember for next add
     const entry = { id, catId, amount, note, date };
     if (usd !== undefined) entry.usd = usd;
     exps[m.id] = [...(exps[m.id] || []), entry];
@@ -2206,7 +3004,7 @@ function startEditIncome(mid, id) {
   if (!inc) return;
   editingIncomeId = id;
   editingIncomeMonth = mid;
-  curSel = inc.usd != null ? "usd" : "uzs";
+  curSel = inc.usd != null ? "sec" : "pri";
   view = "add";
   render();
 }
@@ -2231,7 +3029,7 @@ function doSaveEditIncome() {
 
   // Recompute amount/usd using locked rate
   const lockedRate = inc.rate;
-  if (curSel === "usd") {
+  if (curSel === "sec") {
     inc.usd = inp;
     inc.amount = Math.round(inp * lockedRate);
   } else {
@@ -2712,8 +3510,10 @@ function dismissPwaHint(permanent) {
  *  Boot — auth-gated
  * ═══════════════════════════════════════════════════════════════════════ */
 initPreAuth();    // Theme/lang before auth resolves
-// Only show auth screen if no cached session exists.
-// INITIAL_SESSION fires from localStorage (no network needed) and handles hide/show.
+// Auth screen is display:none in markup. This synchronous check (runs before
+// first paint) shows it only when no cached session exists. With a session,
+// the user goes straight into the app — INITIAL_SESSION then validates it
+// and shows auth only if the session turns out to be invalid.
 if (!localStorage.getItem("wtfimm_auth")) showAuthScreen();
 
 sb.auth.onAuthStateChange(async (event, session) => {
