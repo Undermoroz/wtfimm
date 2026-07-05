@@ -61,6 +61,8 @@ const REQUIRED_FNS = [
   "startAddDebt", "startEditDebt", "cancelEditDebt",
   "dbUpsertDebt", "dbDeleteDebt", "loadDebtsFromSupabase",
   "rdebts", "rDebtsCard", "rDebtItem", "rAddDebtForm", "rEditDebtForm",
+  // Debts v2: repayment history + month events
+  "migrateDebtRepayments", "repaySum", "debtEventsForMonth", "debtEvLabel",
   // Render
   "render", "rdash", "radd", "rlog", "rsum", "rset",
   "rDonut", "fmtShort", "rEditExpForm", "rEditIncomeForm",
@@ -159,6 +161,10 @@ const checks = [
   [html.includes('resetPasswordForEmail'),              'resetPasswordForEmail present'],
   [html.includes('signInWithOAuth'),                    'Google OAuth sign-in present'],
   [html.includes('linkIdentity'),                       'Google account linking present'],
+  [html.includes('debts-bar'),                          'debts bar under quick-add present'],
+  [js.includes('repayments'),                           'repayments history wired'],
+  [js.includes('debtEventsForMonth('),                  'debt events feed stats/journal'],
+  [js.includes('"ab copy"'),                            'labeled copy-to-next button present'],
   [(js.match(/`/g)||[]).length % 2 === 0,               'Even backtick count (no unclosed template literals)'],
 ];
 checks.forEach(([ok, label]) => ok ? pass(label) : fail(label));

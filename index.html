@@ -245,11 +245,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .la{font-size:14px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .la.inc-amt{color:var(--success)}
 .lu{font-size:12px;color:var(--text-dim)}
-.actions{display:flex;gap:6px;margin-top:4px;justify-content:flex-end}
+.actions{display:flex;gap:6px;margin-top:4px;justify-content:flex-end;align-items:center}
 .ab{border:none;background:none;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:5px;font-family:inherit;opacity:.65;transition:.15s}
 .ab:hover{opacity:1;background:var(--card-bg2)}
 .ab.del{color:var(--danger)}
 .ab.edit{color:var(--accent);font-size:15px;padding:2px 4px;opacity:.75}
+.ab.copy{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:7px;padding:3px 8px;color:var(--text-dim);opacity:.85;white-space:nowrap}
+.ab.copy:hover{border-color:var(--accent);color:var(--text);opacity:1}
 /* ─── Summary ───────────────────────────────────────────────────────── */
 .sbox{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:var(--shadow)}
 .spre{font-family:'JetBrains Mono',ui-monospace,'Fira Code','Courier New',monospace;font-size:12px;white-space:pre-wrap;line-height:1.75;color:var(--text-dim);margin-bottom:14px}
@@ -467,6 +469,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover{opacity:.9}
 .logq-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-dim);padding:4px 6px;line-height:1;-webkit-tap-highlight-color:transparent}
 .logq-x:hover{color:var(--text)}
 /* ── Debts ─────────────────────────────────────────────────────────── */
+.debts-bar{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 14px;margin:0 0 6px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;font-size:13px;font-weight:600;color:var(--text);font-family:inherit;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.debts-bar:hover{border-color:var(--accent)}
+.debts-bar.on{border-color:var(--accent);background:var(--card-bg2)}
+.debts-bar-t{white-space:nowrap}
+.debts-bar-v{display:flex;align-items:center;gap:10px;min-width:0}
+.dbv{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.dbv-pos{color:var(--success)}
+.dbv-neg{color:var(--danger)}
+.dbv-dim{color:var(--text-dim);font-weight:500;font-size:12px}
 .debts-card{cursor:pointer;transition:border-color .15s;padding:16px 20px}
 .debts-card:hover{border-color:var(--accent)}
 .debts-head{display:flex;justify-content:space-between;align-items:center}
@@ -710,7 +721,15 @@ const I18N = {
     logSearchPh:"Поиск: сумма, заметка, категория…",
     logNoMatches:"Ничего не найдено 🔍",
     copyNext:"Скопировать в следующий месяц",
+    copyNextShort:"В след. месяц",
     tCopiedNext:"Скопировано в следующий месяц ✓",
+    debtEvOpenOwedMe:"Дал в долг",
+    debtEvOpenIOwe:"Взял в долг",
+    debtEvRepayOwedMe:"Мне вернули долг",
+    debtEvRepayIOwe:"Погасил долг",
+    sumDebts:"🤝 ДОЛГИ:",
+    sumDebtsNet:"Нетто по долгам:",
+    csvDebt:"Долг",
     csvBtn:"⬇️ Скачать CSV",
     csvDate:"Дата", csvType:"Тип", csvCat:"Категория", csvAmount:"Сумма",
     csvCur:"Валюта", csvSecAmount:"Сумма (втор.)", csvRate:"Курс", csvNote:"Заметка",
@@ -797,7 +816,15 @@ const I18N = {
     logSearchPh:"Search: amount, note, category…",
     logNoMatches:"No matches 🔍",
     copyNext:"Copy to next month",
+    copyNextShort:"Next month",
     tCopiedNext:"Copied to next month ✓",
+    debtEvOpenOwedMe:"Lent out",
+    debtEvOpenIOwe:"Borrowed",
+    debtEvRepayOwedMe:"Repaid to me",
+    debtEvRepayIOwe:"Repaid debt",
+    sumDebts:"🤝 DEBTS:",
+    sumDebtsNet:"Debt net:",
+    csvDebt:"Debt",
     csvBtn:"⬇️ Download CSV",
     csvDate:"Date", csvType:"Type", csvCat:"Category", csvAmount:"Amount",
     csvCur:"Currency", csvSecAmount:"Amount (sec.)", csvRate:"Rate", csvNote:"Note",
@@ -1090,6 +1117,34 @@ function pickNotePh() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// All debt money-flow events that fall inside a given month.
+// open  + owed_me → money out (−) · open  + i_owe → money in (+)
+// repay + owed_me → money in  (+) · repay + i_owe → money out (−)
+function debtEventsForMonth(id) {
+  const inMonth = ds => (ds || "").slice(0,7).replace("-","_") === id;
+  const evs = [];
+  for (const d of debts) {
+    migrateDebtRepayments(d);
+    if (inMonth(d.date)) {
+      evs.push({ id: d.id + "_open", debtId: d.id, ev: "open", dir: d.dir,
+        person: d.person, amount: d.amount, usd: d.usd, date: d.date,
+        flow: d.dir === "i_owe" ? 1 : -1 });
+    }
+    for (const r of d.repayments) {
+      if (inMonth(r.date)) {
+        evs.push({ id: d.id + "_" + r.id, debtId: d.id, ev: "repay", dir: d.dir,
+          person: d.person, amount: r.amount, date: r.date,
+          flow: d.dir === "i_owe" ? -1 : 1 });
+      }
+    }
+  }
+  return evs;
+}
+function debtEvLabel(ev) {
+  if (ev.ev === "open") return ev.dir === "i_owe" ? t("debtEvOpenIOwe") : t("debtEvOpenOwedMe");
+  return ev.dir === "i_owe" ? t("debtEvRepayIOwe") : t("debtEvRepayOwedMe");
+}
+
 function stats(id) {
   const expList = exps[id] || [];
   const incList = incs[id] || [];
@@ -1097,7 +1152,12 @@ function stats(id) {
   expList.forEach(e => { bc[e.catId] = (bc[e.catId] || 0) + e.amount; });
   const expTotal = expList.reduce((s,e) => s+e.amount, 0);
   const incTotal = incList.reduce((s,e) => s+e.amount, 0);
-  return { expTotal, incTotal, bc, expList, incList, balance: incTotal - expTotal };
+  const debtEvents = debtEventsForMonth(id);
+  const debtIn  = debtEvents.filter(e => e.flow > 0).reduce((s,e) => s+e.amount, 0);
+  const debtOut = debtEvents.filter(e => e.flow < 0).reduce((s,e) => s+e.amount, 0);
+  return { expTotal, incTotal, bc, expList, incList,
+    debtEvents, debtIn, debtOut,
+    balance: incTotal - expTotal + debtIn - debtOut };
 }
 
 function expTotalUsd(list) {
@@ -1410,7 +1470,17 @@ function updateSyncBar() {
     el.textContent = ru ? "⟳ Синхронизация..." : "⟳ Syncing...";
     el.className = "sync-bar syncing";
   } else if (pending > 0) {
-    el.textContent = ru ? `⚠ ${pending} записей ожидают синхронизации` : `⚠ ${pending} items pending sync`;
+    if (ru) {
+      // 1 запись ожидает · 2–4 записи ожидают · 5+ записей ожидают
+      const n10 = pending % 10, n100 = pending % 100;
+      const noun = (n10 === 1 && n100 !== 11) ? "запись"
+                 : (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) ? "записи"
+                 : "записей";
+      const verb = (n10 === 1 && n100 !== 11) ? "ожидает" : "ожидают";
+      el.textContent = `⚠ ${pending} ${noun} ${verb} синхронизации`;
+    } else {
+      el.textContent = `⚠ ${pending} item${pending === 1 ? "" : "s"} pending sync`;
+    }
     el.className = "sync-bar pending";
   } else {
     el.textContent = "";
@@ -1458,6 +1528,7 @@ async function dbUpsertDebt(d) {
   if (!currentUser) return;
   const row = { id: d.id, user_id: currentUser.id, dir: d.dir, person: d.person || "",
     amount: d.amount, usd: d.usd ?? null, rate: d.rate, paid: d.paid || 0,
+    repayments: d.repayments || [],
     note: d.note || "", date: d.date, due: d.due ?? null, closed_at: d.closedAt ?? null };
   if (isOnline) {
     const { error } = await sb.from("debts").upsert(row, { onConflict: "id" });
@@ -1482,10 +1553,11 @@ async function loadDebtsFromSupabase() {
     const mapped = data.map(r => {
       const d = { id: r.id, dir: r.dir, person: r.person || "", amount: r.amount,
         rate: r.rate, paid: r.paid || 0, note: r.note || "", date: r.date };
+      if (Array.isArray(r.repayments)) d.repayments = r.repayments;
       if (r.usd != null) d.usd = r.usd;
       if (r.due) d.due = r.due;
       if (r.closed_at) d.closedAt = r.closed_at;
-      return d;
+      return migrateDebtRepayments(d);
     });
     if (JSON.stringify(mapped) !== JSON.stringify(debts)) {
       debts = mapped;
@@ -1601,7 +1673,7 @@ async function initUserData() {
   _loadCatsFromLS();
   if (!cats.find(c => c.id === "other")) cats.push({...DEFAULT_CATS.find(c => c.id === "other")});
   LS.set(CK, cats);
-  debts = LS.get(DK) || [];
+  debts = (LS.get(DK) || []).map(migrateDebtRepayments);
   ensureMonth();
   render();
   initSwipes();
@@ -1741,9 +1813,9 @@ async function fetchRateIfNeeded() {
  *  Summary text
  * ═══════════════════════════════════════════════════════════════════════ */
 function makeSummary(m, s) {
-  const { expTotal, incTotal, bc, incList, expList, balance } = s;
+  const { expTotal, incTotal, bc, incList, expList, balance, debtEvents, debtIn, debtOut } = s;
   const unit = curSym();
-  if (!expTotal && !incTotal) return t("sumNoData");
+  if (!expTotal && !incTotal && !debtEvents.length) return t("sumNoData");
 
   let out = `📊 ${monthLabel(m).toUpperCase()}\n\n`;
 
@@ -1766,11 +1838,23 @@ function makeSummary(m, s) {
   // Expense section
   out += `${t("sumExpense")} ${fmt(expTotal)} ${unit}${canConvert() ? ` (~${secSymStr(expTotalUsd(expList))})` : ""}\n\n`;
 
-  // Balance
+  // Debts section (variant B: listed separately, included in the balance)
+  if (debtEvents.length) {
+    out += `${t("sumDebts")}\n`;
+    const sortedEv = [...debtEvents].sort((a,b) => a.date < b.date ? -1 : 1);
+    sortedEv.forEach((ev, i) => {
+      out += `${i+1}. ${ev.flow > 0 ? "+" : "−"}${fmt(ev.amount)} ${unit} · ${debtEvLabel(ev)} · ${ev.person}\n`;
+    });
+    const net = debtIn - debtOut;
+    out += `   ${"─".repeat(28)}\n   ${t("sumDebtsNet")} ${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))} ${unit}\n\n`;
+  }
+
+  // Balance (income − expenses + debt flows)
   const balPrefix = balance >= 0 ? "+" : "";
   let balSecStr = "";
   if (canConvert()) {
-    const balSec = balanceUsd(incList, expList);
+    const debtNetSec = rate > 0 ? Math.round((debtIn - debtOut) / rate) : 0;
+    const balSec = balanceUsd(incList, expList) + debtNetSec;
     balSecStr = ` (${balSec >= 0 ? "+" : "-"}${secSymStr(Math.abs(balSec))})`;
   }
   out += `${t("sumBalance")} ${balPrefix}${fmt(balance)} ${unit}${balSecStr}\n\n`;
@@ -1850,11 +1934,12 @@ ${showMonthPicker ? rMonthPicker() : ""}
       <div class="sub">${canConvert() ? `~${secSymStr(incTotalUsd(s.incList))} · ` : ""}${s.incList.length} ${recWord(s.incList.length)}</div>
     </div>
   </div>
-  ${(s.incTotal > 0 || s.expTotal > 0) ? `
+  ${(s.incTotal > 0 || s.expTotal > 0 || s.debtEvents.length > 0) ? `
     <div class="balance-bar">
       <span class="lbl">${t("balance")}</span>
       <div style="text-align:right">
         <span class="balance-val ${s.balance >= 0 ? "pos" : "neg"}">${s.balance >= 0 ? "+" : ""}${fmt(s.balance)} ${curSym()}</span>
+        ${s.debtEvents.length ? `<div class="sub" style="margin-top:2px">🤝 ${s.debtIn - s.debtOut >= 0 ? "+" : "−"}${fmt(Math.abs(s.debtIn - s.debtOut))}</div>` : ""}
       </div>
     </div>
   ` : ""}
@@ -1863,6 +1948,7 @@ ${showMonthPicker ? rMonthPicker() : ""}
   <button class="qadd-btn exp" onclick="quickAdd('exp')">${t("tabAddE")} ${t("typeExp")}</button>
   <button class="qadd-btn inc" onclick="quickAdd('inc')">${t("tabAddE")} ${t("typeInc")}</button>
 </div>
+${rDebtsCard()}
 <div class="tabs">
   <button class="tab ${view==="dash"?"on":""}" onclick="sv('dash')">${t("tabDashE")} <span class="tab-lbl">${t("tabDash")}</span></button>
   <button class="tab ${view==="log"?"on":""}" onclick="sv('log')">${t("tabLogE")} <span class="tab-lbl">${t("tabLog")}</span></button>
@@ -1948,7 +2034,10 @@ function logMatch(e) {
   const q = logSearchQ.trim().toLowerCase();
   if (!q) return true;
   if ((e.note || "").toLowerCase().includes(q)) return true;
-  if (e._type === "exp") {
+  if (e._type === "debt") {
+    if ((e.person || "").toLowerCase().includes(q)) return true;
+    if (debtEvLabel(e).toLowerCase().includes(q)) return true;
+  } else if (e._type === "exp") {
     const c = catById(e.catId);
     if (c && catName(c).toLowerCase().includes(q)) return true;
   } else {
@@ -2013,10 +2102,9 @@ function rDonut(sorted, bc, expTotal) {
 
 function rdash(s) {
   const { bc, expTotal } = s;
-  const dCard = rDebtsCard();
   const sorted = cats.filter(c => bc[c.id] > 0).sort((a,b) => bc[b.id]-bc[a.id]);
-  if (!sorted.length && s.incList.length === 0) return `<div class="emp">${t("dashEmpty")}</div>` + dCard;
-  if (!sorted.length) return `<div class="emp" style="padding:2rem 1rem">— ${t("sumExpense").replace(":","")} —</div>` + dCard;
+  if (!sorted.length && s.incList.length === 0) return `<div class="emp">${t("dashEmpty")}</div>`;
+  if (!sorted.length) return `<div class="emp" style="padding:2rem 1rem">— ${t("sumExpense").replace(":","")} —</div>`;
   const mx = bc[sorted[0].id];
   return rDonut(sorted, bc, expTotal) + sorted.map(cat => {
     const sp = bc[cat.id], p = expTotal>0 ? Math.round(sp/expTotal*100) : 0;
@@ -2027,7 +2115,7 @@ function rdash(s) {
 </div>
 <div class="bar"><div class="bf" style="width:${Math.round(sp/mx*100)}%;background:${cat.c}"></div></div>
 </div>`;
-  }).join("") + dCard;
+  }).join("");
 }
 
 function radd(m) {
@@ -2208,6 +2296,7 @@ function rlog(s, mid) {
   let all = [
     ...s.incList.map(e => ({...e, _type:"inc"})),
     ...s.expList.map(e => ({...e, _type:"exp"})),
+    ...s.debtEvents.map(e => ({...e, _type:"debt"})),
   ];
 
   const hadEntries = all.length > 0;
@@ -2243,6 +2332,25 @@ function rlog(s, mid) {
   return searchBox + filterChip + all.map(e => {
     const tx = swipedItemId === e.id ? -80 : 0;
     const ts = `transform:translateX(${tx}px)`;
+    if (e._type === "debt") {
+      const pos = e.flow > 0;
+      return `<div class="li${pos ? " income" : ""}">
+  <div class="li-inner">
+    <div class="av" style="background:color-mix(in srgb,var(--accent) 14%,transparent)">🤝</div>
+    <div style="flex:1;min-width:0">
+      <div class="ln">${debtEvLabel(e)} · ${escHTML(e.person)}</div>
+      <div class="lm">${e.date}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;padding-right:10px">
+      <div class="la ${pos ? "inc-amt" : ""}">${pos ? "+" : "−"}${fmt(e.amount)}</div>
+      ${e.ev === "open" && e.usd != null ? `<div class="lu">(${secSymStr(e.usd)})</div>` : ""}
+      <div class="actions">
+        <button class="ab edit" onclick="startEditDebt('${e.debtId}')">${t("edit")}</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+    }
     if (e._type === "inc") {
       return `<div class="li income" data-lid="${e.id}">
   <div class="li-inner" style="${ts}">
@@ -2256,7 +2364,7 @@ function rlog(s, mid) {
       ${e.usd!=null?`<div class="lu">(${secSymStr(e.usd)})</div>`:""}
       <div class="actions">
         <button class="ab edit" onclick="startEditIncome('${mid}','${e.id}')">${t("edit")}</button>
-        <button class="ab" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('inc','${mid}','${e.id}')">📋→</button>
+        <button class="ab copy" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('inc','${mid}','${e.id}')">📋 <span>${t("copyNextShort")}</span></button>
       </div>
     </div>
   </div>
@@ -2276,7 +2384,7 @@ function rlog(s, mid) {
       ${e.usd!=null?`<div class="lu">(${secSymStr(e.usd)})</div>`:""}
       <div class="actions">
         <button class="ab edit" onclick="startEditExp('${mid}','${e.id}')">${t("edit")}</button>
-        <button class="ab" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('exp','${mid}','${e.id}')">📋→</button>
+        <button class="ab copy" title="${t("copyNext")}" aria-label="${t("copyNext")}" onclick="copyToNext('exp','${mid}','${e.id}')">📋 <span>${t("copyNextShort")}</span></button>
       </div>
     </div>
   </div>
@@ -2293,20 +2401,35 @@ function openDebts()   { return debts.filter(d => !d.closedAt); }
 function closedDebts() { return debts.filter(d => !!d.closedAt); }
 function debtById(id)  { return debts.find(d => d.id === id); }
 
-// Compact summary card on the dashboard → opens debts view
+// ── Repayment history migration ─────────────────────────────────────
+// Legacy debts carry only the cumulative `paid` with no dates. Give each
+// debt a repayments[] array; for legacy paid>0 synthesize a single event
+// dated closedAt (if closed) or the debt's creation date. `paid` stays as
+// the cached sum — progress bar / auto-close logic unchanged.
+function migrateDebtRepayments(d) {
+  if (Array.isArray(d.repayments)) return d;
+  d.repayments = (d.paid > 0)
+    ? [{ id: "r" + Date.now() + Math.random().toString(36).slice(2,6),
+         amount: d.paid,
+         date: d.closedAt ? String(d.closedAt).slice(0,10) : d.date }]
+    : [];
+  return d;
+}
+function repaySum(d) { return (d.repayments || []).reduce((a,r) => a + r.amount, 0); }
+
+// Compact debts bar right under the quick-add buttons → opens debts view
 function rDebtsCard() {
   const open = openDebts();
   const owedMe = open.filter(d => d.dir === "owed_me").reduce((a,d) => a + (d.amount - d.paid), 0);
   const iOwe   = open.filter(d => d.dir === "i_owe").reduce((a,d) => a + (d.amount - d.paid), 0);
+  const vals = open.length
+    ? `${owedMe > 0 ? `<span class="dbv dbv-pos">+${fmtShort(owedMe)}</span>` : ""}${iOwe > 0 ? `<span class="dbv dbv-neg">−${fmtShort(iOwe)}</span>` : ""}`
+    : `<span class="dbv dbv-dim">${t("debtNoActive")}</span>`;
   return `
-<div class="card debts-card" onclick="sv('debts')" role="button">
-  <div class="debts-head"><span class="lbl">${t("debtsTitle")}</span><span class="debts-arrow">→</span></div>
-  ${open.length ? `
-  <div class="debts-row">
-    <div><div class="dlbl">${t("debtOwedMe")}</div><div class="dval dval-pos">${fmt(owedMe)} <span class="dim">${curSym()}</span></div></div>
-    <div style="text-align:right"><div class="dlbl">${t("debtIOwe")}</div><div class="dval dval-neg">${fmt(iOwe)} <span class="dim">${curSym()}</span></div></div>
-  </div>` : `<div class="debts-none">${t("debtNoActive")}</div>`}
-</div>`;
+<button class="debts-bar${view === "debts" ? " on" : ""}" onclick="sv('debts')">
+  <span class="debts-bar-t">${t("debtsTitle")}</span>
+  <span class="debts-bar-v">${vals}<span class="debts-arrow">→</span></span>
+</button>`;
 }
 
 function rdebts() {
@@ -2407,7 +2530,7 @@ function doAddDebt() {
   const usd = curSel === "sec" ? inp : undefined;
   const amount = curSel === "sec" ? Math.round(inp*rate) : Math.round(inp);
   const entry = { id: "d" + Date.now() + Math.random().toString(36).slice(2,6),
-    dir: debtDir, person, amount, rate, paid: 0, note, date };
+    dir: debtDir, person, amount, rate, paid: 0, repayments: [], note, date };
   if (usd !== undefined) entry.usd = usd;
   if (due) entry.due = due;
   debts = [...debts, entry];
@@ -2429,7 +2552,14 @@ function doRepay(id) {
   const raw = (document.getElementById("rp_amt")?.value || "").trim();
   const v = parseFloat(raw.replace(/\s/g,"").replace(",","."));
   if (!v || v <= 0 || isNaN(v)) { showToast(t("tEnterAmt"), true); return; }
-  d.paid = Math.min(d.amount, Math.round(d.paid + v));
+  migrateDebtRepayments(d);
+  // Clamp the event to what's actually remaining — history must sum to `paid`
+  const inc = Math.min(d.amount - d.paid, Math.round(v));
+  if (inc > 0) {
+    d.repayments.push({ id: "r" + Date.now() + Math.random().toString(36).slice(2,6),
+      amount: inc, date: tod() });
+    d.paid = Math.min(d.amount, d.paid + inc);
+  }
   if (d.paid >= d.amount) {
     d.closedAt = new Date().toISOString();
     showToast(t("tDebtClosed"));
@@ -2476,6 +2606,23 @@ function doSaveEditDebt() {
   const paidRaw = (document.getElementById("fpd")?.value || "0").trim();
   const paid = parseFloat(paidRaw.replace(/\s/g,"").replace(",","."));
   d.paid = Math.max(0, Math.min(d.amount, Math.round(isNaN(paid) ? 0 : paid)));
+  // Reconcile history with the manually edited total:
+  //  paid increased → append an adjustment event dated today;
+  //  paid decreased → trim newest events down until sums match.
+  migrateDebtRepayments(d);
+  let delta = d.paid - repaySum(d);
+  if (delta > 0) {
+    d.repayments.push({ id: "r" + Date.now() + Math.random().toString(36).slice(2,6),
+      amount: delta, date: tod() });
+  } else if (delta < 0) {
+    let cut = -delta;
+    for (let i = d.repayments.length - 1; i >= 0 && cut > 0; i--) {
+      const take = Math.min(d.repayments[i].amount, cut);
+      d.repayments[i].amount -= take;
+      cut -= take;
+    }
+    d.repayments = d.repayments.filter(r => r.amount > 0);
+  }
   d.dir = editDebtDir || d.dir;
   d.person = person;
   d.note = (document.getElementById("fn")?.value || "").trim();
@@ -2571,7 +2718,7 @@ function rEditDebtForm(d) {
 }
 
 function rsum(m, s) {
-  if (!s.expTotal && !s.incTotal) {
+  if (!s.expTotal && !s.incTotal && !s.debtEvents.length) {
     return `<div class="emp">${t("sumNoData")}</div>`;
   }
   return `<div class="sbox">
@@ -2595,8 +2742,22 @@ function buildCsv(s) {
   const all = [
     ...s.expList.map(e => ({...e, _type:"exp"})),
     ...s.incList.map(e => ({...e, _type:"inc"})),
+    ...s.debtEvents.map(e => ({...e, _type:"debt"})),
   ].sort((a,b) => a.date === b.date ? (a.id < b.id ? -1 : 1) : (a.date < b.date ? -1 : 1));
   for (const e of all) {
+    if (e._type === "debt") {
+      rows.push([
+        e.date,
+        `${t("csvDebt")} ${e.flow > 0 ? "(+)" : "(−)"}`,
+        `${debtEvLabel(e)} — ${e.person}`,
+        e.amount,
+        curPrimary,
+        e.ev === "open" && e.usd != null ? e.usd : "",
+        "",
+        "",
+      ]);
+      continue;
+    }
     const cat = e._type === "exp" ? catName(catById(e.catId)) : "";
     rows.push([
       e.date,
